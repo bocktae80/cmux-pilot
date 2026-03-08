@@ -1,0 +1,19 @@
+{
+  "name": "cmux-pilot",
+  "owner": {
+    "name": "Kent"
+  },
+  "metadata": {
+    "description": "cmux-pilot — Claude Code가 cmux를 조종: 워크스페이스 관리, 사이드바, 브라우저, 오케스트레이션",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "cmux-pilot",
+      "source": "./",
+      "description": "cmux 워크스페이스 생성/저장/복원, 사이드바, 브라우저 패널 자동화",
+      "category": "productivity",
+      "tags": ["cmux", "terminal", "workspace", "multiplexer"]
+    }
+  ]
+}
