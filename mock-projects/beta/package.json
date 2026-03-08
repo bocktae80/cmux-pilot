@@ -1,0 +1,8 @@
+{
+  "name": "mock-beta",
+  "version": "2.3.0",
+  "scripts": {
+    "test": "node test.js",
+    "build": "node build.js"
+  }
+}
