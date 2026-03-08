@@ -101,56 +101,68 @@ def run(cmd):
 raw = '''${raw}'''
 workspaces = []
 
-# 워크스페이스 파싱 (UUID + name)
+# 워크스페이스 파싱: '* workspace:1  cmux-pilot  [selected]' 또는 '  workspace:59  work'
 for line in raw.strip().split('\n'):
     line = line.strip()
     if not line:
         continue
-    # UUID 추출
-    uuid_match = re.search(r'([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})', line)
-    if not uuid_match:
+    # workspace:N ref 추출
+    ref_match = re.search(r'(workspace:\d+)\s+(\S+)', line)
+    if not ref_match:
         continue
-    uuid = uuid_match.group(1)
-    # 이름은 UUID 이후
-    name = line[uuid_match.end():].strip() or uuid[:8]
+    ref = ref_match.group(1)
+    name = ref_match.group(2)
+    # [selected] 등 태그 제거
+    if name.startswith('['):
+        continue
 
     # cwd 추출 (sidebar-state)
-    sidebar = run(f'cmux sidebar-state --workspace {uuid}')
-    cwd_match = re.search(r'cwd[:\s]+(.+)', sidebar)
-    cwd = cwd_match.group(1).strip() if cwd_match else ''
+    sidebar = run(f'cmux sidebar-state --workspace {ref}')
+    cwd = ''
+    for sline in sidebar.split('\n'):
+        if sline.startswith('cwd='):
+            cwd = sline[4:]
+            break
 
-    # status 추출
-    status_raw = run(f'cmux list-status --workspace {uuid}')
+    # status 추출: 'key=value color=#hex' 형식
+    status_raw = run(f'cmux list-status --workspace {ref}')
     status_items = []
     for sline in status_raw.split('\n'):
         sline = sline.strip()
         if not sline:
             continue
-        # key=value 또는 key: value 패턴
-        kv_match = re.search(r'(\w+)[=:\s]+(.+)', sline)
-        if kv_match:
+        # 'claude=active color=#8b5cf6' 형식 파싱
+        color_match = re.search(r'color=(#[0-9a-fA-F]{6})', sline)
+        color = color_match.group(1) if color_match else ''
+        # color 부분 제거하고 key=value 추출
+        kv_part = re.sub(r'\s*color=#[0-9a-fA-F]{6}', '', sline)
+        eq_match = re.match(r'(\w[\w-]*)=(.+)', kv_part)
+        if eq_match:
             status_items.append({
-                'key': kv_match.group(1),
-                'value': kv_match.group(2).strip()
+                'key': eq_match.group(1),
+                'value': eq_match.group(2).strip(),
+                'color': color
             })
 
-    # panels 추출
-    panels_raw = run(f'cmux list-panels --workspace {uuid}')
+    # panels 추출: '* surface:1  terminal  [focused]  \"title\"'
+    panels_raw = run(f'cmux list-panels --workspace {ref}')
     panels = []
     if panels_raw:
         for pline in panels_raw.split('\n'):
             pline = pline.strip()
             if not pline:
                 continue
+            is_focused = '[focused]' in pline
             if 'browser' in pline.lower():
                 url_match = re.search(r'(https?://\S+)', pline)
                 panels.append({
                     'type': 'browser',
                     'direction': 'right',
-                    'url': url_match.group(1) if url_match else ''
+                    'url': url_match.group(1) if url_match else '',
+                    'focused': is_focused
                 })
-            elif 'terminal' in pline.lower() or 'pane' in pline.lower():
-                panels.append({'type': 'terminal', 'focused': True})
+            elif 'terminal' in pline.lower():
+                panels.append({'type': 'terminal', 'focused': is_focused})
     if not panels:
         panels.append({'type': 'terminal', 'focused': True})
 
