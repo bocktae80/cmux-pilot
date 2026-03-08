@@ -1,6 +1,6 @@
 ---
 name: cmux-workspace
-description: "cmux 워크스페이스를 관리할 때 사용. '워크스페이스 만들어', 'workspace save', '워크스페이스 복원', 'cmux 레이아웃', '작업 환경 저장', '작업 환경 복원' 등의 키워드에 트리거."
+description: "cmux 워크스페이스를 관리할 때 사용. '워크스페이스 만들어', 'workspace save', '워크스페이스 복원', 'cmux 레이아웃', '작업 환경 저장', '작업 환경 복원', '자동 저장', 'autosave', '자동 저장 켜줘', '자동 저장 꺼줘' 등의 키워드에 트리거."
 allowed-tools: [Bash, Read, Write, Glob]
 ---
 
@@ -76,11 +76,33 @@ cmux_ws_restore
       "panels": [
         { "type": "terminal", "focused": true },
         { "type": "browser", "direction": "right", "url": "http://localhost:3000" }
-      ]
+      ],
+      "claude_session": {
+        "session_id": "6cea659a-f389-468e-85d7-7112962435c7",
+        "resume_cmd": "claude --resume 6cea659a"
+      }
     }
   ]
 }
 ```
+
+## 자동 저장 (cron)
+
+15분마다 워크스페이스 상태를 자동 저장합니다. 변경이 없으면 저장하지 않습니다.
+
+```bash
+# cron 등록
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/cmux-autosave-cron.sh" install
+
+# cron 해제
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/cmux-autosave-cron.sh" uninstall
+
+# 상태 확인
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/cmux-autosave-cron.sh" status
+```
+
+- 로그: `~/.config/cmux-pilot/autosave.log`
+- cmux가 꺼져있으면 자동으로 스킵
 
 ## cmux 주요 명령어 레퍼런스
 

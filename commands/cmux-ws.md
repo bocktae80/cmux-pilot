@@ -1,7 +1,7 @@
 ---
 name: cmux-ws
 description: "cmux 워크스페이스 관리 (생성/저장/복원)"
-argument-hint: "[new|save|restore] [options]"
+argument-hint: "[new|save|restore|autosave] [options]"
 allowed-tools: [Bash, Read, Write]
 ---
 
@@ -15,6 +15,7 @@ allowed-tools: [Bash, Read, Write]
 - **`new`**: 새 워크스페이스를 생성합니다.
 - **`save`**: 전체 워크스페이스 구성을 JSON으로 저장합니다.
 - **`restore`**: JSON에서 워크스페이스를 복원합니다.
+- **`autosave`**, **`autosave install`**, **`autosave uninstall`**: 자동 저장 cron 관리.
 
 ## 실행 방법
 
@@ -56,8 +57,25 @@ bash -c 'source "${CLAUDE_PLUGIN_ROOT}/lib/cmux-ws-manager.sh" && cmux_ws_restor
 
 저장된 JSON에서 워크스페이스를 재생성합니다. 복원 전 현재 상태와 차이를 보여주고 확인을 받습니다.
 
+### autosave
+
+자동 저장 cron을 관리합니다.
+
+```bash
+# 상태 확인
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/cmux-autosave-cron.sh" status
+
+# 등록 (15분마다, 변경 시에만 저장)
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/cmux-autosave-cron.sh" install
+
+# 해제
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/cmux-autosave-cron.sh" uninstall
+```
+
 ## 주의사항
 
 - cmux가 실행 중이어야 합니다 (`/tmp/cmux.sock` 존재 확인)
 - restore는 기존 워크스페이스를 건드리지 않고 추가 생성합니다
 - save 시 현재 활성 워크스페이스의 모든 패널 구성이 저장됩니다
+- save 시 Claude Code 세션도 cwd 기반으로 매칭하여 저장됩니다
+- restore 후 Claude Code 세션은 안내된 명령어로 수동 복원합니다

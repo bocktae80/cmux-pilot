@@ -88,7 +88,7 @@ cmux_ws_save() {
 
   # Python으로 JSON 생성 (jq 의존성 없이)
   python3 -c "
-import subprocess, json, re, sys
+import subprocess, json, re, sys, os
 from datetime import datetime, timezone, timedelta
 
 def run(cmd):
@@ -166,12 +166,31 @@ for line in raw.strip().split('\n'):
     if not panels:
         panels.append({'type': 'terminal', 'focused': True})
 
-    workspaces.append({
+    # Claude Code 세션 매칭 (cwd 기반)
+    claude_session = None
+    if cwd:
+        project_dir = cwd.replace('/', '-')
+        claude_projects_path = os.path.expanduser(f'~/.claude/projects/{project_dir}')
+        if os.path.isdir(claude_projects_path):
+            jsonl_files = [f for f in os.listdir(claude_projects_path) if f.endswith('.jsonl')]
+            if jsonl_files:
+                latest = max(jsonl_files, key=lambda f: os.path.getmtime(os.path.join(claude_projects_path, f)))
+                session_id = latest.replace('.jsonl', '')
+                claude_session = {
+                    'session_id': session_id,
+                    'resume_cmd': f'claude --resume {session_id[:8]}'
+                }
+
+    ws_data = {
         'name': name,
         'cwd': cwd,
         'status': status_items,
         'panels': panels
-    })
+    }
+    if claude_session:
+        ws_data['claude_session'] = claude_session
+
+    workspaces.append(ws_data)
 
 kst = timezone(timedelta(hours=9))
 result = {
@@ -211,7 +230,7 @@ cmux_ws_restore() {
   local restored=0
 
   # Python으로 JSON 읽어서 각 워크스페이스 복원
-  while IFS=$'\t' read -r name cwd status_json panels_json; do
+  while IFS=$'\t' read -r name cwd status_json panels_json _resume_cmd; do
     echo "  복원 중: $name ($cwd)"
 
     # 워크스페이스 생성
@@ -273,7 +292,31 @@ for ws in d.get('workspaces', []):
     cwd = ws.get('cwd', '')
     status = json.dumps(ws.get('status', []))
     panels = json.dumps(ws.get('panels', []))
-    print(f'{name}\t{cwd}\t{status}\t{panels}')
+    cs = ws.get('claude_session', {})
+    resume_cmd = cs.get('resume_cmd', '')
+    print(f'{name}\t{cwd}\t{status}\t{panels}\t{resume_cmd}')
+")
+
+  # Claude Code 세션 안내
+  local has_sessions=false
+  while IFS=$'\t' read -r name cwd _ _ resume_cmd; do
+    if [[ -n "$resume_cmd" ]]; then
+      if [[ "$has_sessions" == "false" ]]; then
+        echo ""
+        echo "Claude Code 세션 복원 (각 워크스페이스 터미널에서 실행):"
+        has_sessions=true
+      fi
+      echo "  $name: $resume_cmd"
+    fi
+  done < <(python3 -c "
+import json, sys
+d = json.load(open('$input'))
+for ws in d.get('workspaces', []):
+    name = ws.get('name', 'unnamed')
+    cwd = ws.get('cwd', '')
+    cs = ws.get('claude_session', {})
+    resume_cmd = cs.get('resume_cmd', '')
+    print(f'{name}\t{cwd}\t\t\t{resume_cmd}')
 ")
 
   echo ""

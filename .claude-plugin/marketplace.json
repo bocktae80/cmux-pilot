@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "cmux-pilot — Claude Code가 cmux를 조종: 워크스페이스 관리, 사이드바, 브라우저, 오케스트레이션",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
