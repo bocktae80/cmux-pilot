@@ -4,4 +4,7 @@
 *~
 .workbook/
 /tmp/
-**/.claude/sessions/
+
+# .claude 개인 파일만 제외 (commands/, skills/, settings.json은 팀 공유)
+.claude/settings.local.json
+.claude/sessions/
