@@ -21,7 +21,12 @@ surface_id="${CMUX_SURFACE_ID:-}"
 ws_info=""
 
 if [[ -n "$ws_id" ]]; then
-  ws_name=$(cmux list-workspaces 2>/dev/null | grep "$ws_id" | head -1 | awk '{print $NF}' || echo "unknown")
+  # identify로 workspace ref 획득 → list-workspaces에서 이름 매칭
+  ws_ref=$(cmux identify 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('caller',{}).get('workspace_ref',''))" 2>/dev/null || echo "")
+  if [[ -n "$ws_ref" ]]; then
+    ws_name=$(cmux list-workspaces 2>/dev/null | grep "^[* ]*${ws_ref} " | head -1 | awk '{for(i=2;i<=NF;i++){if($i!~"\\["){print $i; exit}}}')
+  fi
+  ws_name="${ws_name:-unknown}"
   ws_info="워크스페이스: ${ws_name} (${ws_id})"
 else
   ws_count=$(cmux list-workspaces 2>/dev/null | wc -l | tr -d ' ')
@@ -35,8 +40,12 @@ if [[ -n "$ws_id" && -n "$surface_id" && -n "$SESSION_ID" ]]; then
   mkdir -p "$SESSION_MAP_DIR"
 
   # ws_name이 아직 없으면 다시 추출
-  if [[ -z "${ws_name:-}" ]]; then
-    ws_name=$(cmux list-workspaces 2>/dev/null | grep "$ws_id" | head -1 | awk '{print $NF}' || echo "unknown")
+  if [[ -z "${ws_name:-}" || "${ws_name}" == "unknown" ]]; then
+    ws_ref=$(cmux identify 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('caller',{}).get('workspace_ref',''))" 2>/dev/null || echo "")
+    if [[ -n "$ws_ref" ]]; then
+      ws_name=$(cmux list-workspaces 2>/dev/null | grep "^[* ]*${ws_ref} " | head -1 | awk '{for(i=2;i<=NF;i++){if($i!~"\\["){print $i; exit}}}')
+    fi
+    ws_name="${ws_name:-unknown}"
   fi
 
   # JSONL append (python3로 안전한 JSON 생성)
