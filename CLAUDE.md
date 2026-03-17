@@ -27,7 +27,8 @@ cmux-pilot/                        # 플러그인 루트
 ├── hooks/                         # 훅
 │   ├── hooks.json
 │   └── scripts/
-│       └── cmux-session-init.sh   # SessionStart: cmux 환경 감지
+│       ├── cmux-session-init.sh   # SessionStart: cmux 환경 감지 + 세션 매핑
+│       └── cmux-ws-resume.sh     # 세션 일괄 복원
 │
 ├── lib/                           # 라이브러리
 │   ├── cmux-helpers.sh            # 기존 헬퍼 (45함수)
@@ -44,8 +45,9 @@ cmux-pilot/                        # 플러그인 루트
 
 - `/cmux-ws` — 워크스페이스 목록
 - `/cmux-ws new` — 새 워크스페이스 (이름, 경로, 컬러, 브라우저 URL)
-- `/cmux-ws save` — 전체 구성을 JSON으로 저장
-- `/cmux-ws restore` — JSON에서 워크스페이스 복원
+- `/cmux-ws save` — 전체 구성을 JSON으로 저장 (세션 매핑 포함)
+- `/cmux-ws restore` — JSON에서 워크스페이스 복원 (세션 자동 resume)
+- `/cmux-ws resume` — 기존 워크스페이스에 세션 일괄 복원
 
 ## 규칙
 

@@ -15,6 +15,7 @@ allowed-tools: [Bash, Read, Write]
 - **`new`**: 새 워크스페이스를 생성합니다.
 - **`save`**: 전체 워크스페이스 구성을 JSON으로 저장합니다.
 - **`restore`**: JSON에서 워크스페이스를 복원합니다.
+- **`resume`**: 저장된 세션을 현재 워크스페이스에 일괄 복원합니다.
 - **`autosave`**, **`autosave install`**, **`autosave uninstall`**: 자동 저장 cron 관리.
 
 ## 실행 방법
@@ -57,6 +58,16 @@ bash -c 'source "${CLAUDE_PLUGIN_ROOT}/lib/cmux-ws-manager.sh" && cmux_ws_restor
 
 저장된 JSON에서 워크스페이스를 재생성합니다. 복원 전 현재 상태와 차이를 보여주고 확인을 받습니다.
 
+### resume
+
+워크스페이스가 이미 복원된 상태에서 Claude Code 세션을 일괄 resume합니다.
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/cmux-ws-resume.sh"
+```
+
+이름 기반으로 현재 워크스페이스와 저장된 세션을 매칭합니다. 각 워크스페이스의 터미널에 `claude --resume` 명령이 자동 전송됩니다. surface가 부족하면 자동 생성합니다.
+
 ### autosave
 
 자동 저장 cron을 관리합니다.
@@ -77,5 +88,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/cmux-autosave-cron.sh" uninstall
 - cmux가 실행 중이어야 합니다 (`/tmp/cmux.sock` 존재 확인)
 - restore는 기존 워크스페이스를 건드리지 않고 추가 생성합니다
 - save 시 현재 활성 워크스페이스의 모든 패널 구성이 저장됩니다
-- save 시 Claude Code 세션도 cwd 기반으로 매칭하여 저장됩니다
-- restore 후 Claude Code 세션은 안내된 명령어로 수동 복원합니다
+- save 시 Claude Code 세션은 session-map.jsonl 매핑으로 정확히 매칭됩니다 (cwd fallback 유지)
+- restore 시 claude_sessions 배열의 세션이 각 surface에 자동 resume됩니다
+- resume은 별도로 실행 가능: 워크스페이스만 먼저 복원 후 `/cmux-ws resume`으로 세션 복원
+- 세션 매핑은 `~/.config/cmux-pilot/session-map.jsonl`에 append-only로 기록됩니다

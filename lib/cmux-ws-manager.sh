@@ -101,6 +101,23 @@ def run(cmd):
 raw = '''${raw}'''
 workspaces = []
 
+# session-map.jsonl 로딩 (workspace_id별 인덱스)
+session_map_by_ws = {}
+session_map_path = os.path.expanduser('~/.config/cmux-pilot/session-map.jsonl')
+if os.path.isfile(session_map_path):
+    with open(session_map_path) as f:
+        for map_line in f:
+            map_line = map_line.strip()
+            if not map_line:
+                continue
+            try:
+                entry = json.loads(map_line)
+                wid = entry.get('workspace_id', '')
+                if wid:
+                    session_map_by_ws.setdefault(wid, []).append(entry)
+            except:
+                continue
+
 # 워크스페이스 파싱: '* workspace:1  cmux-pilot  [selected]' 또는 '  workspace:59  work'
 for line in raw.strip().split('\n'):
     line = line.strip()
@@ -166,20 +183,69 @@ for line in raw.strip().split('\n'):
     if not panels:
         panels.append({'type': 'terminal', 'focused': True})
 
-    # Claude Code 세션 매칭 (cwd 기반)
+    # workspace UUID 추출 (sidebar-state의 tab= 필드)
+    ws_uuid = ''
+    for sline in sidebar.split('\n'):
+        if sline.startswith('tab='):
+            ws_uuid = sline[4:]
+            break
+
+    # Claude Code 세션 매칭 (session-map.jsonl 우선, cwd fallback)
+    claude_sessions = []
     claude_session = None
-    if cwd:
+
+    if ws_uuid and ws_uuid in session_map_by_ws:
+        # session-map에서 workspace UUID로 매칭 → surface별 최신 세션
+        surface_latest = {}
+        for entry in session_map_by_ws[ws_uuid]:
+            sid = entry.get('surface_id', '')
+            if sid:
+                if sid not in surface_latest or entry.get('timestamp', '') > surface_latest[sid].get('timestamp', ''):
+                    surface_latest[sid] = entry
+        for sid, entry in surface_latest.items():
+            session_id = entry.get('session_id', '')
+            if session_id:
+                claude_sessions.append({
+                    'session_id': session_id,
+                    'surface_id': sid,
+                    'resume_cmd': f'claude --resume {session_id}'
+                })
+
+    # fallback: cwd 기반 + 워크스페이스 이름으로 대화 내용 유추 매칭
+    if not claude_sessions and cwd:
         project_dir = cwd.replace('/', '-')
         claude_projects_path = os.path.expanduser(f'~/.claude/projects/{project_dir}')
         if os.path.isdir(claude_projects_path):
             jsonl_files = [f for f in os.listdir(claude_projects_path) if f.endswith('.jsonl')]
             if jsonl_files:
-                latest = max(jsonl_files, key=lambda f: os.path.getmtime(os.path.join(claude_projects_path, f)))
-                session_id = latest.replace('.jsonl', '')
-                claude_session = {
+                # 최신순 정렬
+                jsonl_files.sort(
+                    key=lambda f: os.path.getmtime(os.path.join(claude_projects_path, f)),
+                    reverse=True
+                )
+                # 워크스페이스 이름으로 대화 내용 검색 (최신순, 첫 매칭 채택)
+                matched_session = None
+                for jf in jsonl_files:
+                    jpath = os.path.join(claude_projects_path, jf)
+                    try:
+                        with open(jpath, 'r', errors='ignore') as fh:
+                            content = fh.read(64 * 1024)  # 앞 64KB만 검색 (hook 출력은 초반에 있음)
+                        if name.lower() in content.lower():
+                            matched_session = jf.replace('.jsonl', '')
+                            break
+                    except:
+                        continue
+                # 매칭된 세션 없으면 최신 파일로 fallback
+                session_id = matched_session if matched_session else jsonl_files[0].replace('.jsonl', '')
+                claude_sessions.append({
                     'session_id': session_id,
-                    'resume_cmd': f'claude --resume {session_id[:8]}'
-                }
+                    'surface_id': '',
+                    'resume_cmd': f'claude --resume {session_id}',
+                    'match_type': 'name_inferred' if matched_session else 'latest_fallback'
+                })
+
+    if claude_sessions:
+        claude_session = claude_sessions[0]
 
     ws_data = {
         'name': name,
@@ -187,6 +253,10 @@ for line in raw.strip().split('\n'):
         'status': status_items,
         'panels': panels
     }
+    if ws_uuid:
+        ws_data['workspace_id'] = ws_uuid
+    if claude_sessions:
+        ws_data['claude_sessions'] = claude_sessions
     if claude_session:
         ws_data['claude_session'] = claude_session
 
@@ -230,7 +300,7 @@ cmux_ws_restore() {
   local restored=0
 
   # Python으로 JSON 읽어서 각 워크스페이스 복원
-  while IFS=$'\t' read -r name cwd status_json panels_json _resume_cmd; do
+  while IFS=$'\t' read -r name cwd status_json panels_json sessions_json; do
     echo "  복원 중: $name ($cwd)"
 
     # 워크스페이스 생성
@@ -282,6 +352,87 @@ for panel in panels:
 " 2>/dev/null || true
     fi
 
+    # Claude Code 세션 자동 resume (claude_sessions 배열)
+    if [[ -n "$sessions_json" && "$sessions_json" != "[]" ]]; then
+      python3 -c "
+import subprocess, json, time, re
+
+def run(cmd):
+    try:
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
+        return r.stdout.strip()
+    except:
+        return ''
+
+sessions = json.loads('$sessions_json')
+uuid = '$uuid'
+cwd = '$cwd'
+
+# 현재 워크스페이스의 terminal surface 목록
+panels_raw = run(f'cmux list-panels --workspace {uuid}')
+surfaces = []
+if panels_raw:
+    for pline in panels_raw.strip().split('\n'):
+        pline = pline.strip()
+        surf_match = re.search(r'(surface:\d+)', pline)
+        if surf_match and 'terminal' in pline.lower():
+            surfaces.append(surf_match.group(1))
+
+for i, session in enumerate(sessions):
+    session_id = session.get('session_id', '')
+    resume_cmd = session.get('resume_cmd', f'claude --resume {session_id}')
+
+    if i < len(surfaces):
+        surf_ref = surfaces[i]
+    else:
+        # surface 부족 → 새로 생성
+        new_cmd = f'cmux new-pane --type terminal --workspace {uuid}'
+        if cwd:
+            new_cmd += f\" --command \\\"cd '{cwd}' && zsh\\\"\"
+        new_raw = run(new_cmd)
+        surf_match = re.search(r'(surface:\d+)', new_raw) if new_raw else None
+        if surf_match:
+            surf_ref = surf_match.group(1)
+            time.sleep(0.5)
+        else:
+            print(f'    FAIL: surface 생성 실패 (세션 {i+1})')
+            continue
+
+    # resume 명령 전송
+    time.sleep(0.3)
+    if cwd:
+        run(f\"cmux send-keys --surface {surf_ref} -- \\\"cd '{cwd}'\\n\\\"\")
+        time.sleep(0.3)
+    run(f'cmux send-keys --surface {surf_ref} -- \"{resume_cmd}\n\"')
+    print(f'    resume: {surf_ref} → {resume_cmd}')
+    time.sleep(0.5)
+
+    # session-map.jsonl에 새 매핑 기록
+    from datetime import datetime, timezone, timedelta
+    kst = timezone(timedelta(hours=9))
+    # surface UUID 추출 (sidebar-state에서)
+    sidebar = run(f'cmux sidebar-state --surface {surf_ref}')
+    surface_uuid = ''
+    for sline in sidebar.split('\n'):
+        if sline.startswith('id='):
+            surface_uuid = sline[3:]
+            break
+    if surface_uuid and session_id:
+        import os
+        map_path = os.path.expanduser('~/.config/cmux-pilot/session-map.jsonl')
+        entry = json.dumps({
+            'surface_id': surface_uuid,
+            'workspace_id': uuid,
+            'workspace_name': '$name',
+            'session_id': session_id,
+            'cwd': cwd,
+            'timestamp': datetime.now(kst).isoformat()
+        }, ensure_ascii=False)
+        with open(map_path, 'a') as f:
+            f.write(entry + '\n')
+" 2>/dev/null || true
+    fi
+
     ((restored++))
     echo "    OK: $name ($uuid)"
   done < <(python3 -c "
@@ -292,31 +443,12 @@ for ws in d.get('workspaces', []):
     cwd = ws.get('cwd', '')
     status = json.dumps(ws.get('status', []))
     panels = json.dumps(ws.get('panels', []))
-    cs = ws.get('claude_session', {})
-    resume_cmd = cs.get('resume_cmd', '')
-    print(f'{name}\t{cwd}\t{status}\t{panels}\t{resume_cmd}')
-")
-
-  # Claude Code 세션 안내
-  local has_sessions=false
-  while IFS=$'\t' read -r name cwd _ _ resume_cmd; do
-    if [[ -n "$resume_cmd" ]]; then
-      if [[ "$has_sessions" == "false" ]]; then
-        echo ""
-        echo "Claude Code 세션 복원 (각 워크스페이스 터미널에서 실행):"
-        has_sessions=true
-      fi
-      echo "  $name: $resume_cmd"
-    fi
-  done < <(python3 -c "
-import json, sys
-d = json.load(open('$input'))
-for ws in d.get('workspaces', []):
-    name = ws.get('name', 'unnamed')
-    cwd = ws.get('cwd', '')
-    cs = ws.get('claude_session', {})
-    resume_cmd = cs.get('resume_cmd', '')
-    print(f'{name}\t{cwd}\t\t\t{resume_cmd}')
+    # claude_sessions (복수) 우선, 없으면 claude_session (단수)를 배열로
+    sessions = ws.get('claude_sessions', [])
+    if not sessions and ws.get('claude_session'):
+        sessions = [ws['claude_session']]
+    sessions_json = json.dumps(sessions)
+    print(f'{name}\t{cwd}\t{status}\t{panels}\t{sessions_json}')
 ")
 
   echo ""
