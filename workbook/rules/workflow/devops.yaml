@@ -1,0 +1,213 @@
+# DevOps & Infrastructure Rule
+# DevOps/인프라 원칙
+
+id: devops-001
+name: DevOps/인프라 원칙
+description: |
+  DevOps 및 인프라 운영 시 따라야 할 핵심 원칙.
+  CI/CD, 컨테이너화, 모니터링, 인프라 코드화에 대한 가이드라인.
+
+category: workflow/devops
+tags:
+  - devops
+  - infrastructure
+  - cicd
+  - container
+  - monitoring
+  - iac
+
+severity: error
+
+claude_summary:
+  - "**IaC**: 모든 인프라 코드로 정의, 수동 변경 금지, Drift Detection"
+  - "**CI/CD**: Lint→Test→Build→Deploy 파이프라인, 테스트 실패 시 배포 차단"
+  - "**컨테이너**: 최소 이미지, 멀티스테이지 빌드, non-root, immutable 태그"
+  - "**모니터링**: Metrics/Logs/Traces 3축, SLI/SLO, 구조화 로그(JSON)"
+  - "**장애 대응**: Runbook 사전 작성, 먼저 복구 후 원인 분석, Postmortem 문화"
+
+rules:
+  infrastructure-as-code:
+    description: "Infrastructure as Code (IaC) 원칙"
+    items:
+      - 모든 인프라는 코드로 정의 (Terraform, Pulumi, CloudFormation)
+      - 수동 변경 금지 - 콘솔에서 직접 수정하지 않음
+      - 인프라 코드도 버전 관리, PR 리뷰 필수
+      - 환경별 분리 (dev/staging/prod) - 같은 코드, 다른 변수
+      - 상태 파일(tfstate)은 원격 저장소에 안전하게 보관
+      - Drift Detection - 실제 상태와 코드의 차이 주기적 확인
+
+  immutable-infrastructure:
+    description: "불변 인프라 원칙"
+    items:
+      - 서버 직접 수정(SSH 접속 후 변경) 금지
+      - 변경이 필요하면 새 이미지 빌드 후 교체
+      - Blue/Green 또는 Canary 배포로 무중단 교체
+      - 롤백은 이전 버전 재배포로 처리
+
+  ci-cd-pipeline:
+    description: "CI/CD 파이프라인 원칙"
+    items:
+      - 모든 변경은 파이프라인을 통해서만 배포
+      - 파이프라인 단계: Lint → Test → Build → Deploy
+      - 테스트 실패 시 배포 차단 (Gate)
+      - 배포 승인 프로세스 - prod는 수동 승인 권장
+      - 파이프라인 코드도 버전 관리 (.github/workflows, Jenkinsfile)
+      - Secret은 파이프라인 변수/Vault에서 주입, 코드에 절대 포함 금지
+
+  container-best-practices:
+    description: "컨테이너 모범 사례"
+    items:
+      - 이미지는 가능한 작게 (Alpine, distroless 기반)
+      - 멀티스테이지 빌드로 빌드 의존성 제거
+      - root 사용자로 실행 금지 - 전용 사용자 생성
+      - 하나의 컨테이너는 하나의 프로세스만
+      - 이미지 태그는 immutable (latest 사용 지양, SHA 또는 버전 태그)
+      - 이미지 스캔 - 취약점/라이선스 검사 필수
+      - .dockerignore로 불필요한 파일 제외
+
+  kubernetes-guidelines:
+    description: "Kubernetes 가이드라인"
+    items:
+      - Resource Limits/Requests 필수 설정
+      - Liveness/Readiness Probe 필수 설정
+      - PodDisruptionBudget으로 가용성 보장
+      - Namespace로 환경/팀 분리
+      - RBAC으로 최소 권한 부여
+      - Secret은 외부 시스템(Vault, AWS Secrets Manager)과 연동
+      - Helm Chart 또는 Kustomize로 배포 관리
+
+  monitoring-observability:
+    description: "모니터링/관측성 원칙"
+    items:
+      - 3 Pillars - Metrics, Logs, Traces 모두 수집
+      - SLI/SLO 정의 - 측정 가능한 서비스 목표 설정
+      - Alert는 Actionable하게 - 대응 방법이 명확한 알림만
+      - 대시보드는 한눈에 파악 가능하게 (RED Method - Rate, Errors, Duration)
+      - 로그는 구조화(JSON), 상관관계 ID(Correlation ID) 포함
+      - 분산 추적으로 서비스 간 호출 흐름 파악
+
+  incident-management:
+    description: "장애 대응 원칙"
+    items:
+      - Runbook 사전 작성 - 예상 장애 시나리오별 대응 절차
+      - On-Call 로테이션 운영
+      - 장애 발생 시 먼저 복구, 원인 분석은 나중에
+      - Postmortem 문화 - 비난 없는 회고, 재발 방지책 수립
+      - 장애 타임라인 기록 - 언제 무엇을 했는지 상세히
+
+  backup-disaster-recovery:
+    description: "백업/재해 복구 원칙"
+    items:
+      - 3-2-1 규칙 - 3개 복사본, 2개 다른 미디어, 1개 오프사이트
+      - 백업 복구 테스트 - 정기적으로 실제 복구 시뮬레이션
+      - RPO/RTO 정의 - 데이터 손실 허용치, 복구 목표 시간 명확화
+      - 멀티 리전 구성 - 지역 장애 대비
+      - 자동화된 백업 - 수동 백업에 의존하지 않음
+
+  cost-optimization:
+    description: "비용 최적화 원칙"
+    items:
+      - 리소스 태깅 필수 - 팀/프로젝트/환경별 비용 추적
+      - 미사용 리소스 정기 정리 (스케줄링)
+      - 적정 크기 선택 (Right-sizing) - 과도한 스펙 방지
+      - Reserved/Spot Instance 활용 검토
+      - 비용 알림 설정 - 예산 초과 시 자동 알림
+
+  gitops-principles:
+    description: "GitOps 원칙"
+    items:
+      - Git이 Single Source of Truth
+      - 선언적 설정 - 원하는 상태를 기술
+      - 자동 동기화 - Git 변경 시 자동 적용 (ArgoCD, Flux)
+      - 감사 추적 - Git 히스토리로 변경 이력 확인
+
+examples:
+  good:
+    - |
+      # Terraform - 환경별 변수 분리
+      terraform/
+      ├── modules/
+      │   └── vpc/
+      ├── environments/
+      │   ├── dev.tfvars
+      │   ├── staging.tfvars
+      │   └── prod.tfvars
+      └── main.tf
+    - |
+      # Dockerfile - 멀티스테이지 빌드, non-root user
+      FROM node:20-alpine AS builder
+      WORKDIR /app
+      COPY package*.json ./
+      RUN npm ci --only=production
+
+      FROM gcr.io/distroless/nodejs20
+      COPY --from=builder /app/node_modules ./node_modules
+      COPY . .
+      USER 1000
+      CMD ["server.js"]
+    - |
+      # Kubernetes - Resource limits, Probes
+      apiVersion: apps/v1
+      kind: Deployment
+      spec:
+        template:
+          spec:
+            containers:
+            - name: app
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "200m"
+              livenessProbe:
+                httpGet:
+                  path: /health
+                  port: 8080
+                initialDelaySeconds: 10
+              readinessProbe:
+                httpGet:
+                  path: /ready
+                  port: 8080
+    - |
+      # CI/CD - GitHub Actions with approval
+      jobs:
+        deploy-prod:
+          needs: [test, build]
+          environment:
+            name: production
+            url: https://app.example.com
+          # production environment에 수동 승인 설정
+  bad:
+    - "AWS 콘솔에서 직접 EC2 설정 변경"
+    - "Dockerfile에서 root로 실행"
+    - "kubectl apply -f 수동 실행으로 배포"
+    - "Secret을 .env 파일로 커밋"
+    - "모니터링 없이 프로덕션 운영"
+    - "백업은 있지만 복구 테스트 안 함"
+    - "latest 태그로 이미지 배포"
+    - "테스트 실패해도 배포 가능한 파이프라인"
+
+exceptions:
+  - 긴급 장애 대응 시 임시 수동 변경 (반드시 사후 IaC 반영)
+  - 로컬 개발 환경
+  - 초기 프로토타입/PoC 단계
+
+created: "2025-02-06T00:00:00Z"
+updated: "2025-02-06T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

@@ -1,0 +1,111 @@
+# WorkLog Protocol
+# 워크로그 캡처 및 기록 규칙
+
+id: worklog-protocol-001
+name: WorkLog 캡처 프로토콜
+description: |
+  세션 중 작업 이력을 2단계(요약본 + 원본)로 영속 저장하는 프로토콜.
+  요약본은 핵심 결정/변경사항을, 원본은 대화 맥락을 보존한다.
+  저장소: workbook/log/worklogs/ (git tracked)
+
+category: workflow/worklog
+tags:
+  - worklog
+  - transcript
+  - session
+  - history
+  - team
+
+severity: warning
+
+rules:
+  automatic-capture:
+    description: "자동 캡처 (EventBus 오케스트레이션)"
+    items:
+      - "세션 시작 시 워크로그 파일 자동 생성 (session.start → worklog.createLog)"
+      - "체크포인트 시 요약본 갱신 + 원본에 청크 추가 (session.checkpoint → worklog.appendChunk)"
+      - "세션 종료 시 최종 요약본 저장 (session.end → worklog.finalize)"
+      - "CHANGELOG 항목 추가 시 워크로그에 자동 연결 (log.addEntry → worklog.recordChangelogRef)"
+
+  checkpoint-capture:
+    description: "체크포인트 시 기록 범위"
+    items:
+      - "사용자 요청 요약 — 핵심 지시사항만 간결하게"
+      - "어시스턴트 핵심 응답 — 수행한 작업과 결과 요약"
+      - "결정사항 — 채택한 접근법과 이유"
+      - "코드 변경 목록 — 생성/수정/삭제된 파일과 변경 유형"
+
+  auto-capture-hint:
+    description: "자동 캡처 힌트 (AI가 판단)"
+    items:
+      - "10분 이상 연속 작업 시 자동 스냅샷 고려"
+      - "5턴 이상 대화 시 중간 정리 고려"
+      - "중요한 결정이 내려졌을 때 즉시 기록"
+      - "대규모 코드 변경(5개 이상 파일) 시 변경 목록 기록"
+
+  summary-generation:
+    description: "세션 종료 시 자동 요약 생성"
+    items:
+      - "체크포인트 누적 데이터를 기반으로 최종 요약 합성"
+      - "목표 달성 여부를 체크리스트로 표시"
+      - "핵심 결정사항을 번호 목록으로 정리"
+      - "변경사항을 type별(added/changed/fixed/removed)로 그룹화"
+      - "다음 작업 항목을 우선순위 순으로 나열"
+
+  file-convention:
+    description: "파일 명명 및 저장 규칙"
+    items:
+      - "파일명: {date}-{sessionIdShort}-{author}.md (요약본)"
+      - "파일명: {date}-{sessionIdShort}-{author}.transcript.md (원본)"
+      - "저장 위치: workbook/log/worklogs/ (git tracked)"
+      - "세션ID + 저자 조합으로 유니크 보장 → git merge 안전"
+
+  team-sharing:
+    description: "팀 공유 프로토콜"
+    items:
+      - "워크로그는 기본 visibility: team으로 생성"
+      - "git push 시 팀원 간 자동 공유 (파일 기반)"
+      - "저자 식별: preferences.yaml의 author 필드 사용"
+      - "각 세션이 독립 파일이므로 git merge 충돌 없음"
+
+examples:
+  checkpoint-trigger: |
+    체크포인트 시 워크로그에 기록할 내용:
+    ```
+    ### User
+    워크로그 시스템을 설계하자
+
+    ### Assistant
+    SessionManager 분석 후 WorkLogManager 설계 완료.
+    파일+DB 하이브리드 저장소 채택.
+
+    ### 결정사항
+    - 하이브리드 저장소 채택 (이유: 오프라인+공유 양립)
+
+    ### 코드 변경
+    - `worklog-types.ts` added (8개 타입)
+    - `worklog-manager.ts` added (코어 매니저)
+    ```
+
+  session-end-summary: |
+    세션 종료 시 자동 생성되는 요약:
+    ```
+    ## 목표
+    - [x] WorkLog 타입 정의
+    - [x] WorkLogManager 코어 구현
+    - [ ] DB 동기화 어댑터 (다음 세션)
+
+    ## 핵심 결정
+    1. 파일+DB 하이브리드 저장소 채택
+
+    ## 변경 사항
+    - **added**: worklog-types.ts
+    - **added**: worklog-manager.ts
+    - **changed**: index.ts
+    ```
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin

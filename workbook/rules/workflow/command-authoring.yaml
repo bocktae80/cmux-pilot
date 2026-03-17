@@ -1,0 +1,86 @@
+# Command Authoring Rule
+# 커맨드 작성 규칙
+
+id: command-authoring-001
+name: 커맨드 작성 규칙
+description: |
+  워크북 슬래시 커맨드 추가/수정 시 반드시 따라야 할 절차.
+  자연어 인텐트 매핑 누락 방지.
+
+category: workflow/command-authoring
+tags:
+  - command
+  - intent
+  - natural-language
+  - workbook
+
+severity: error
+
+rules:
+  command-intent-sync:
+    description: "커맨드 ↔ 자연어 인텐트 동기화"
+    items:
+      - "커맨드 파일 추가/수정 시 SKILL.md 인텐트 매핑도 반드시 함께 추가/수정"
+      - "인텐트 테이블 (카테고리별 표)에 행 추가"
+      - "intentPatterns 배열에 패턴 객체 추가"
+      - "인자가 필요한 커맨드는 extractArguments()에 케이스 추가"
+      - "패턴 우선순위 주의: 더 구체적인 패턴이 일반 패턴보다 위에 위치"
+
+  intent-pattern-guidelines:
+    description: "인텐트 패턴 가이드라인"
+    items:
+      - "한글 키워드 최소 2개 이상 (예: 콘솔, 대시보드)"
+      - "영어 키워드 최소 1개 이상 (예: console, dashboard)"
+      - "커맨드 description에 한글 트리거 명시 (예: 한글: 콘솔, 대시보드)"
+      - "서브커맨드도 별도 인텐트로 등록 (예: /wb-plan add → milestone_add)"
+
+  checklist:
+    description: "커맨드 추가 체크리스트"
+    items:
+      - "1. workbook-pkg/commands/wb-*.md 커맨드 파일 생성"
+      - "2. workbook-pkg/skills/workbook-intent/SKILL.md 인텐트 테이블에 행 추가"
+      - "3. SKILL.md intentPatterns 배열에 패턴 객체 추가"
+      - "4. 인자 추출이 필요하면 extractArguments()에 케이스 추가"
+      - "5. CLAUDE.md (프로젝트) 커맨드 표에 행 추가"
+      - "6. /Users/kent/Work/CLAUDE.md (워크스페이스) 주요 커맨드 표에 행 추가"
+      - "7. scripts/install.cjs 설치 완료 메시지에 커맨드 추가"
+
+  install-sync:
+    description: "설치 스크립트 동기화 — 기능/커맨드 변경 시 확인"
+    items:
+      - "커맨드 추가: scripts/install.cjs 설치 완료 메시지 (콘솔 출력)에 반영"
+      - "새 도구 권한 필요 시: install.cjs WORKBOOK_PERMISSIONS 배열에 추가"
+      - "새 도구 권한 필요 시: uninstall.cjs WORKBOOK_PERMISSIONS 배열도 동일하게 동기화"
+      - "자동 트리거 동작 추가 시: install.cjs WORKBOOK_GLOBAL_BEHAVIORS 섹션 업데이트"
+      - "install.cjs와 uninstall.cjs의 WORKBOOK_PERMISSIONS는 반드시 동일해야 함"
+
+examples:
+  good:
+    - |
+      # 커맨드 + 인텐트 + 설치 스크립트 동시 추가
+      1. wb-backlog.md 생성 (description에 한글 트리거 포함)
+      2. SKILL.md 테이블에 "백로그 조회/추가/제거" 행 추가
+      3. intentPatterns에 backlog_list, backlog_add, backlog_remove 추가
+      4. extractArguments()에 backlog_add, backlog_remove 케이스 추가
+      5. CLAUDE.md (프로젝트) 커맨드 표에 /wb-backlog 행 추가
+      6. /Users/kent/Work/CLAUDE.md (워크스페이스) 커맨드 표에 행 추가
+      7. scripts/install.cjs 설치 완료 메시지에 /wb-backlog 추가
+  bad:
+    - "커맨드만 추가하고 SKILL.md 인텐트 매핑 누락"
+    - "인텐트 테이블은 추가했지만 패턴 코드 누락"
+    - "커맨드/인텐트는 추가했지만 install.cjs 설치 메시지 미반영"
+    - "install.cjs에 권한 추가하고 uninstall.cjs는 미반영"
+
+exceptions:
+  - 내부 전용 커맨드 (사용자가 직접 호출하지 않는 경우)
+
+created: "2026-02-08T00:00:00Z"
+updated: "2026-02-08T00:00:00Z"
+scope: project
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin

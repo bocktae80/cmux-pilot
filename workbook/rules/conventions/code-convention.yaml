@@ -1,0 +1,135 @@
+# Code Convention Rule
+# TypeScript 코드 컨벤션
+
+id: code-convention-001
+name: 코드 컨벤션
+description: |
+  TypeScript 코드 작성 시 따라야 할 네이밍, import 순서, 타입 안전,
+  파일 크기, 에러 핸들링, export 규칙을 정의한다.
+
+category: conventions/code
+tags:
+  - code
+  - naming
+  - typescript
+  - import
+  - convention
+
+severity: error
+
+claude_summary:
+  - "**네이밍**: PascalCase(인터페이스/클래스/타입/컴포넌트), camelCase(함수/변수), UPPER_SNAKE_CASE(상수), kebab-case(파일명)"
+  - "**Import**: Node builtin → 외부 패키지 → 내부 모듈 → 상대 경로 (그룹 간 빈 줄)"
+  - "**타입 안전**: `any` 금지(`unknown` 사용), 함수 반환 타입 명시, strict mode"
+  - "**제한**: 파일 600줄·함수 50줄 이내, 빈 catch 금지, 에러 무시 시 주석 필수"
+
+rules:
+  naming:
+    description: "네이밍 규칙"
+    items:
+      - "PascalCase: 인터페이스, 클래스, 타입 별칭, React 컴포넌트"
+      - "camelCase: 함수, 변수, 메서드, 파라미터"
+      - "UPPER_SNAKE_CASE: 상수 (const로 선언된 모듈 레벨 값)"
+      - "kebab-case: 파일명 (예: user-service.ts, auth-middleware.ts)"
+      - "boolean 변수는 is/has/should/can 접두사 사용"
+      - "이벤트 핸들러는 handle/on 접두사 사용"
+
+  import_order:
+    description: "Import 순서 규칙"
+    items:
+      - "1순위: Node.js 빌트인 모듈 (node:fs, node:path)"
+      - "2순위: 외부 패키지 (react, express, lodash)"
+      - "3순위: 내부 모듈 (절대 경로 import, @/ alias)"
+      - "4순위: 상대 경로 (./utils, ../types)"
+      - "그룹 간 빈 줄 하나로 구분"
+      - "각 그룹 내에서는 알파벳 순서"
+
+  type_safety:
+    description: "타입 안전 규칙"
+    items:
+      - "`any` 타입 사용 금지 — `unknown`으로 대체 후 타입 가드 사용"
+      - "함수 반환 타입 명시 (자명한 경우 제외)"
+      - "tsconfig strict mode 필수 (strict: true)"
+      - "non-null assertion (!) 사용 최소화 — 옵셔널 체이닝(?.) 선호"
+      - "타입 단언(as) 보다 타입 가드(is) 선호"
+
+  file_size:
+    description: "파일 및 함수 크기 제한"
+    items:
+      - "단일 파일 600줄 이내"
+      - "단일 함수/메서드 50줄 이내"
+      - "초과 시 모듈 분리 또는 함수 추출 필수"
+
+  error_handling:
+    description: "에러 핸들링 규칙"
+    items:
+      - "빈 catch 블록 금지 (최소한 로깅 또는 re-throw)"
+      - "catch에서 에러 타입 명시 (catch (error: unknown))"
+      - "에러를 의도적으로 무시하는 경우 주석으로 이유 명시"
+      - "async 함수의 에러는 try/catch 또는 .catch()로 처리"
+
+  export:
+    description: "Export 규칙"
+    items:
+      - "파일당 주요 export 1개 권장 (관련 타입은 named export)"
+      - "barrel export(index.ts)로 모듈 공개 API 정의"
+      - "내부 구현은 export하지 않음 — index.ts에서 re-export하는 것만 공개"
+
+examples:
+  good:
+    - |
+      // 파일명: user-service.ts
+      import { readFile } from 'node:fs/promises';
+
+      import { z } from 'zod';
+
+      import { DatabaseClient } from '@/infrastructure/database';
+
+      import { UserSchema } from './types';
+
+      const MAX_RETRY_COUNT = 3;
+
+      interface UserService {
+        findById(id: string): Promise<User | null>;
+      }
+    - |
+      // 에러 핸들링
+      try {
+        await saveUser(data);
+      } catch (error: unknown) {
+        logger.error('사용자 저장 실패', { error });
+        throw new ApplicationError('USER_SAVE_FAILED', error);
+      }
+  bad:
+    - |
+      // any 사용
+      function process(data: any) { ... }
+    - |
+      // 빈 catch
+      try { doSomething(); } catch (e) {}
+    - |
+      // 파일명 PascalCase
+      UserService.ts  // → user-service.ts
+
+exceptions:
+  - "외부 라이브러리 타입 정의에서 any가 필수인 경우 (// eslint-disable 주석과 함께)"
+  - "테스트 파일에서의 타입 단언(as)은 허용"
+  - "자동 생성 코드(codegen)는 이 규칙에서 제외"
+
+created: "2025-02-13T00:00:00Z"
+updated: "2025-02-13T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

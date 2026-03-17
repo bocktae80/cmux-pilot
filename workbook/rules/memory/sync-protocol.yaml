@@ -1,0 +1,71 @@
+# Sync Protocol: ROADMAP ↔ PLANS.md ↔ Auto Memory
+# 3파일 동기화 규칙
+
+id: memory-sync-001
+title: 메모리 동기화 프로토콜
+severity: info
+keywords:
+  - memory
+  - sync
+  - roadmap
+  - plans
+  - session
+
+description: |
+  ROADMAP.md, PLANS.md, MEMORY.md 간 상태 동기화 규칙.
+  세션 단위로 자동 반영하여 정보 일관성을 유지한다.
+
+# === 동기화 대상 ===
+targets:
+  roadmap:
+    path: workbook/plan/ROADMAP.md
+    role: 마일스톤/작업항목의 진행 상태 (source of truth)
+  plans:
+    path: ~/.claude/plans/*.md
+    role: Claude Code 플랜 모드에서 생성된 구현 계획
+  memory:
+    path: ~/.claude/projects/{project-path}/memory/MEMORY.md
+    role: 프로젝트별 누적 컨텍스트 (auto memory)
+
+# === 동기화 규칙 ===
+rules:
+  # 플랜 생성 시
+  on_plan_create:
+    - action: PLANS.md에 매핑 추가
+      detail: |
+        플랜 파일 경로와 연결된 ROADMAP 작업항목 기록.
+        예: "M3-02 → ~/.claude/plans/implement-memory-bridge.md"
+    - condition: optional
+      reason: PLANS.md가 없으면 건너뜀
+
+  # 구현 완료 시
+  on_implementation_complete:
+    - action: PLANS.md 상태 갱신
+      detail: 해당 플랜의 status를 completed로 변경
+    - action: ROADMAP 체크박스 업데이트
+      detail: 연결된 작업항목의 [ ] → [x] 전환
+
+  # 세션 종료 시 (/wb-end)
+  on_session_end:
+    - action: MEMORY.md "Current Status" 섹션 반영
+      detail: |
+        completedTasks, nextTasks 기반으로 Current Status 갱신.
+        새로 발견한 패턴은 "Key Patterns & Gotchas"에 추가.
+    - action: 자동 에센스 생성 (optional)
+      condition: completedTasks가 있고, 의미 있는 인사이트가 있을 때
+      detail: |
+        type: context, maturity: draft로 에센스 자동 생성.
+        세션 요약을 기반으로 에센스 본문 구성.
+
+# === 충돌 해결 ===
+conflict_resolution:
+  principle: ROADMAP이 source of truth
+  detail: |
+    ROADMAP과 MEMORY.md가 불일치하면 ROADMAP 기준으로 MEMORY.md 갱신.
+    PLANS.md는 참조용이므로 불일치 시 경고만 출력.
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin

@@ -1,0 +1,103 @@
+# AI Behavior Rule
+# AI 행동 원칙
+
+id: ai-behavior-001
+name: AI 행동 원칙
+description: |
+  모든 하위 프로젝트에서 AI가 반드시 따라야 할 행동 원칙.
+  워크스페이스 레벨에서 정의되며, 하위 프로젝트 규칙이 이를 오버라이드할 수 있다.
+
+category: workflow/ai-behavior
+tags:
+  - ai
+  - behavior
+  - workspace
+  - foundation
+
+severity: error
+
+claude_summary:
+  - "**언어**: 대화/문서는 한국어, 코드/커밋은 영어"
+  - "**수정 전 확인**: 파일 읽고 패턴 파악 후 수정"
+  - "**범위 준수**: 요청 범위만 수정, 리팩토링/추가 기능 금지"
+  - "**계층 존중**: 하위 프로젝트 규칙 우선 (local-wins)"
+  - "**문서화**: 중요 결정 기록, 복잡한 변경 전후 기록"
+
+rules:
+  language:
+    description: "언어 사용 원칙"
+    items:
+      - 대화 및 문서는 한국어로 작성
+      - 코드, 변수명, 커밋 메시지는 영어로 작성
+      - 코드 주석은 한국어 허용 (복잡한 로직 설명 시)
+
+  before-modify:
+    description: "수정 전 확인 원칙"
+    items:
+      - 파일 수정 전 반드시 현재 상태를 읽고 확인
+      - 기존 패턴과 컨벤션을 파악한 후 수정
+      - 변경 범위가 클 경우 계획을 먼저 제시
+
+  scope-discipline:
+    description: "범위 준수 원칙"
+    items:
+      - 요청받은 범위만 수정, 불필요한 리팩토링 금지
+      - 관련 없는 코드 개선/정리 금지
+      - 추가 기능 제안은 별도로 언급, 임의 구현 금지
+
+  hierarchy-respect:
+    description: "계층 존중 원칙"
+    items:
+      - 하위 프로젝트의 CLAUDE.md가 있으면 해당 규칙 우선 적용
+      - 하위 프로젝트 규칙과 워크스페이스 규칙 충돌 시 local-wins
+      - 하위 프로젝트의 기존 패턴/구조를 존중
+
+  documentation:
+    description: "문서화 원칙"
+    items:
+      - 중요한 결정은 반드시 문서화
+      - 복잡한 작업 전후로 변경 사항 기록
+      - 새 프로젝트 생성 시 README.md 포함
+
+examples:
+  good:
+    - |
+      # 한국어 대화, 영어 코드
+      사용자: "로그인 기능 추가해주세요"
+      AI: "로그인 기능을 구현하겠습니다."
+      코드: function handleLogin(credentials: LoginCredentials) { }
+    - |
+      # 수정 전 확인
+      AI: "먼저 현재 파일 상태를 확인하겠습니다."
+      → 파일 읽기 → 패턴 파악 → 수정
+    - |
+      # 범위 준수
+      요청: "버그 수정"
+      AI: 해당 버그만 수정 (주변 코드 리팩토링 X)
+  bad:
+    - "파일을 읽지 않고 바로 수정 시작"
+    - "버그 수정 요청에 전체 파일 리팩토링"
+    - "하위 프로젝트 CLAUDE.md 무시하고 워크스페이스 규칙만 적용"
+    - "한국어로 변수명 작성"
+
+exceptions:
+  - 사용자가 명시적으로 영어 대화를 요청한 경우
+  - 사용자가 리팩토링을 명시적으로 요청한 경우
+
+created: "2025-02-05T00:00:00Z"
+updated: "2025-02-05T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

@@ -1,0 +1,109 @@
+# Documentation Rule
+# 문서화 규칙
+
+id: documentation-001
+name: 문서화 기준
+description: |
+  워크스페이스 전체의 문서화 기준을 정의합니다.
+  모든 프로젝트는 최소한의 문서화 기준을 충족해야 합니다.
+
+category: workflow/documentation
+tags:
+  - documentation
+  - readme
+  - changelog
+  - workspace
+
+severity: warning
+
+rules:
+  readme:
+    description: "README 필수 섹션"
+    items:
+      - "프로젝트 이름과 한 줄 설명"
+      - "설치/시작 방법 (Getting Started)"
+      - "주요 기능 또는 사용법"
+      - "기술 스택"
+      - "npm 패키지인 경우: API 문서 또는 링크"
+
+  comments:
+    description: "주석 규칙"
+    items:
+      - 주석은 한국어로 작성
+      - 복잡한 비즈니스 로직에만 주석 추가
+      - 자명한 코드에는 주석 금지
+      - TODO/FIXME 주석에는 담당자 또는 이슈 번호 포함
+
+  changelog:
+    description: "CHANGELOG 규칙"
+    items:
+      - npm 패키지 및 플러그인에는 CHANGELOG.md 필수
+      - Keep a Changelog 형식 권장
+      - 시맨틱 버저닝 연동
+
+  project-docs:
+    description: "프로젝트 문서 규칙"
+    items:
+      - 아키텍처 결정은 ADR(Architecture Decision Record) 또는 README에 기록
+      - 환경 설정은 .env.example로 문서화
+      - 복잡한 설정은 별도 가이드 문서 작성
+
+examples:
+  good:
+    - |
+      # 프로젝트명
+
+      한 줄 설명.
+
+      ## 시작하기
+
+      ```bash
+      npm install
+      npm run dev
+      ```
+
+      ## 주요 기능
+
+      - 기능 1
+      - 기능 2
+
+      ## 기술 스택
+
+      - TypeScript, React, Next.js
+    - |
+      // 복잡한 로직에만 주석
+      // 할인율 계산: 회원 등급별 기본 할인 + 쿠폰 할인 + 시즌 할인
+      // 최대 할인율 50% 제한
+      function calculateDiscount(user: User, coupons: Coupon[]): number { }
+    - |
+      // TODO(@kent): #123 - 캐시 무효화 로직 개선 필요
+  bad:
+    - "README 없이 프로젝트 생성"
+    - |
+      // 자명한 코드에 불필요한 주석
+      // 사용자 이름을 가져온다
+      const userName = user.name;
+    - "npm 패키지에 CHANGELOG 없음"
+    - "// TODO: 나중에 고치기 (담당자/이슈 없음)"
+
+exceptions:
+  - 프로토타입/실험 프로젝트 (README 최소화 허용)
+  - 내부 스크립트 (CHANGELOG 불필요)
+
+created: "2025-02-05T00:00:00Z"
+updated: "2025-02-05T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

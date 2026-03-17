@@ -1,0 +1,290 @@
+# Security Rule
+# 보안 원칙
+
+id: security-001
+name: 보안 원칙
+description: |
+  보안 전문가 역할 수행 시 따라야 할 핵심 원칙.
+  개인정보 보호, 인프라 보안, 애플리케이션 보안에 대한 엄격한 가이드라인.
+
+category: workflow/security
+tags:
+  - security
+  - privacy
+  - compliance
+  - infrastructure-security
+  - application-security
+
+severity: error
+
+claude_summary:
+  - "**개인정보**: 데이터 분류(Public~Restricted), PII 식별, 최소 수집, 보존 기간 정의"
+  - "**암호화**: 저장/전송 암호화 필수, 민감 데이터 필드 레벨 암호화, KMS 키 관리"
+  - "**접근 통제**: Need-to-Know, MFA 필수, 최소 권한(RBAC), Secret Manager 사용"
+  - "**시큐어 코딩**: OWASP Top 10, 입력 검증(Whitelist), 파라미터화 쿼리, XSS/CSRF 방지"
+  - "**프로세스**: 코드 리뷰에 보안 포함, 사고 대응 계획(IRP), 침투 테스트 연 1회+"
+
+rules:
+  # === 개인정보 보호 ===
+  privacy-data-classification:
+    description: "데이터 분류 체계"
+    items:
+      - 모든 데이터는 민감도에 따라 분류 (Public, Internal, Confidential, Restricted)
+      - 개인정보(PII) 식별 및 목록화 필수
+      - 민감 개인정보(건강, 금융, 생체 등) 별도 관리
+      - 데이터 흐름도(Data Flow Diagram) 작성 - 어디서 어디로 이동하는지
+
+  privacy-data-minimization:
+    description: "데이터 최소화 원칙"
+    items:
+      - 목적에 필요한 최소한의 데이터만 수집
+      - 불필요한 필드 수집 금지
+      - 보존 기간 명확히 정의, 기간 경과 시 자동 삭제
+      - 처리 목적 달성 시 즉시 삭제
+
+  privacy-encryption:
+    description: "개인정보 암호화 원칙"
+    items:
+      - 저장 시 암호화(Encryption at Rest) 필수
+      - 전송 시 암호화(Encryption in Transit) 필수 - TLS 1.2+
+      - 민감 데이터는 필드 레벨 암호화 적용
+      - 암호화 키는 데이터와 분리 보관 (KMS 사용)
+      - 키 로테이션 주기 설정 및 자동화
+
+  privacy-access-control:
+    description: "개인정보 접근 통제"
+    items:
+      - Need-to-Know 원칙 - 업무상 필요한 사람만 접근
+      - 접근 로그 기록 및 모니터링
+      - 주기적 접근 권한 검토 (최소 분기 1회)
+      - 퇴사/이동 시 즉시 권한 회수
+
+  privacy-anonymization:
+    description: "비식별화/익명화"
+    items:
+      - 테스트 환경에 실제 개인정보 사용 금지 - 마스킹/가명처리
+      - 분석용 데이터는 k-익명성, l-다양성 등 적용 검토
+      - 로그에 개인정보 직접 기록 금지 - 마스킹 필수
+      - 에러 메시지에 개인정보 노출 금지
+
+  privacy-compliance:
+    description: "개인정보보호법 준수"
+    items:
+      - 개인정보처리방침 공개 및 최신 상태 유지
+      - 수집 시 명확한 동의 획득, 동의 기록 보관
+      - 정보주체 권리 보장 (열람, 정정, 삭제, 이동)
+      - 제3자 제공 시 별도 동의, 계약서 체결
+      - 개인정보 영향평가(PIA) - 신규 서비스 도입 시 필수
+
+  # === 인프라 보안 ===
+  infra-network-security:
+    description: "네트워크 보안"
+    items:
+      - Zero Trust - 내부 네트워크도 신뢰하지 않음
+      - 네트워크 세그멘테이션 - 중요 자산 격리
+      - 인바운드/아웃바운드 방화벽 규칙 최소화
+      - VPN/Private Link로 외부 접근 통제
+      - DDoS 방어 체계 구축 (WAF, Rate Limiting)
+      - 공개 IP 최소화, 필요한 경우만 노출
+
+  infra-access-management:
+    description: "인프라 접근 관리"
+    items:
+      - MFA 필수 - 모든 관리자 계정
+      - SSH 키 기반 인증, 패스워드 인증 비활성화
+      - Bastion Host 통한 접근 - 직접 접근 금지
+      - Just-In-Time Access - 필요 시에만 임시 권한 부여
+      - 세션 녹화/감사 로그 - 관리자 작업 기록
+      - 특권 계정(root, admin) 일상 사용 금지
+
+  infra-identity-management:
+    description: "ID/접근 관리 (IAM)"
+    items:
+      - 최소 권한 원칙 (Principle of Least Privilege)
+      - 역할 기반 접근 제어 (RBAC)
+      - 서비스 계정은 필요한 권한만 부여
+      - API 키/토큰 주기적 로테이션
+      - 사용하지 않는 계정/키 즉시 비활성화
+      - IAM 정책 버전 관리 및 리뷰
+
+  infra-secret-management:
+    description: "Secret 관리"
+    items:
+      - 코드에 하드코딩 절대 금지
+      - Secret Manager 사용 (Vault, AWS Secrets Manager)
+      - Secret 접근 감사 로그 필수
+      - 자동 로테이션 설정
+      - 개발/스테이징/프로덕션 Secret 분리
+      - Git hook으로 Secret 커밋 방지 (pre-commit)
+
+  infra-patch-management:
+    description: "패치 관리"
+    items:
+      - 취약점 스캔 자동화 (이미지, 의존성, OS)
+      - Critical/High 취약점 즉시 패치 (SLA 정의)
+      - 패치 적용 전 테스트 환경 검증
+      - OS/런타임 EOL 추적, 사전 업그레이드 계획
+      - 자동 업데이트 vs 통제된 업데이트 정책 수립
+
+  infra-logging-audit:
+    description: "로깅/감사"
+    items:
+      - 모든 인프라 변경 로그 기록 (CloudTrail, 감사 로그)
+      - 로그 중앙 집중화, 변조 방지
+      - 로그 보존 기간 규정 준수 (최소 1년)
+      - 보안 이벤트 실시간 알림 설정
+      - 정기적 로그 리뷰 및 분석
+
+  # === 애플리케이션 보안 ===
+  app-secure-coding:
+    description: "시큐어 코딩 원칙"
+    items:
+      - OWASP Top 10 숙지 및 방어
+      - 모든 사용자 입력 검증 (Whitelist 방식)
+      - 파라미터화된 쿼리 사용 - SQL Injection 방지
+      - 출력 인코딩 - XSS 방지
+      - CSRF 토큰 사용
+      - 안전한 역직렬화 - 신뢰할 수 없는 데이터 역직렬화 금지
+
+  app-authentication:
+    description: "인증 보안"
+    items:
+      - 강력한 비밀번호 정책 (길이, 복잡도)
+      - 비밀번호 안전한 해싱 (bcrypt, Argon2)
+      - 계정 잠금 정책 - Brute Force 방지
+      - 세션 관리 - 안전한 세션 ID, 타임아웃 설정
+      - 토큰 기반 인증 시 안전한 저장 (HttpOnly, Secure 쿠키)
+
+  app-authorization:
+    description: "인가 보안"
+    items:
+      - 서버 사이드에서 항상 권한 검증
+      - 클라이언트 사이드 검증에만 의존 금지
+      - 직접 객체 참조 취약점 방지 (IDOR)
+      - API 엔드포인트별 권한 검증 필수
+      - 권한 상승 취약점 테스트
+
+  app-dependency-security:
+    description: "의존성 보안"
+    items:
+      - 의존성 취약점 스캔 자동화 (Dependabot, Snyk)
+      - 알려진 취약 버전 사용 금지
+      - 라이선스 호환성 확인
+      - Lock 파일(package-lock.json, yarn.lock) 커밋 필수
+      - 정기적 의존성 업데이트 (최소 월 1회)
+
+  app-api-security:
+    description: "API 보안"
+    items:
+      - Rate Limiting 필수
+      - API 인증/인가 필수 (API Key, OAuth, JWT)
+      - HTTPS만 허용
+      - CORS 설정 최소화
+      - API 버저닝으로 하위 호환성 관리
+      - GraphQL Introspection 프로덕션 비활성화
+
+  # === 보안 프로세스 ===
+  security-review:
+    description: "보안 리뷰 프로세스"
+    items:
+      - 코드 리뷰 시 보안 관점 필수 포함
+      - 민감 기능 변경 시 보안팀 리뷰
+      - 정기 보안 감사 (내부/외부)
+      - Penetration Testing - 연 1회 이상
+      - Bug Bounty 프로그램 검토
+
+  incident-response:
+    description: "보안 사고 대응"
+    items:
+      - 사고 대응 계획(IRP) 사전 수립
+      - 사고 심각도 분류 체계 정의
+      - 에스컬레이션 경로 명확화
+      - 증거 보존 절차
+      - 사고 후 복구 및 재발 방지 조치
+      - 법적 보고 의무 확인 (개인정보 유출 시)
+
+examples:
+  good:
+    - |
+      # 비밀번호 안전한 해싱
+      import bcrypt from 'bcrypt';
+      const SALT_ROUNDS = 12;
+      const hash = await bcrypt.hash(password, SALT_ROUNDS);
+    - |
+      # 파라미터화된 쿼리 (SQL Injection 방지)
+      const user = await db.query(
+        'SELECT * FROM users WHERE id = $1',
+        [userId]  // 파라미터화
+      );
+    - |
+      # 입력 검증 (Whitelist)
+      const allowedRoles = ['admin', 'user', 'viewer'];
+      if (!allowedRoles.includes(role)) {
+        throw new Error('Invalid role');
+      }
+    - |
+      # Secret Manager 사용
+      import { SecretsManager } from '@aws-sdk/client-secrets-manager';
+      const secret = await secretsManager.getSecretValue({ SecretId: 'db-password' });
+    - |
+      # 로그 마스킹
+      logger.info('User login', {
+        userId: user.id,
+        email: maskEmail(user.email),  // user@example.com → u***@e*****.com
+        ip: request.ip
+      });
+    - |
+      # IAM 최소 권한 정책
+      {
+        "Version": "2012-10-17",
+        "Statement": [{
+          "Effect": "Allow",
+          "Action": ["s3:GetObject"],
+          "Resource": "arn:aws:s3:::my-bucket/uploads/*"
+        }]
+      }
+  bad:
+    - |
+      # 하드코딩된 비밀번호
+      const dbPassword = 'super_secret_123';
+    - |
+      # SQL Injection 취약
+      db.query(`SELECT * FROM users WHERE id = ${userId}`);
+    - |
+      # 개인정보 로그 직접 기록
+      console.log('User registered:', user.email, user.phone);
+    - |
+      # 클라이언트 사이드만 의존
+      if (user.role === 'admin') { showAdminPanel(); }
+      // 서버에서는 검증 없음
+    - |
+      # 약한 해싱
+      const hash = md5(password);  // MD5는 비밀번호에 부적합
+    - |
+      # 과도한 IAM 권한
+      { "Action": "*", "Resource": "*" }
+    - "테스트 환경에 프로덕션 DB 복제본 사용"
+    - "Secret을 .env 파일로 커밋"
+    - "2FA 없이 관리자 콘솔 접근"
+
+exceptions:
+  - 로컬 개발 환경의 mock 데이터
+  - 보안 테스트/Penetration Testing 수행 시
+
+created: "2025-02-06T00:00:00Z"
+updated: "2025-02-06T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

@@ -1,0 +1,114 @@
+# Completion Rule
+# 작업 완료 규칙
+
+id: completion-001
+name: 작업 완료 기준
+description: |
+  코드 구현 작업 완료 시 반드시 수행해야 할 절차를 정의합니다.
+  빌드 검증, 활용 시나리오 제시, 문서 동기화를 포함합니다.
+
+category: workflow/completion
+tags:
+  - completion
+  - delivery
+  - scenario
+  - workspace
+
+severity: warning
+
+rules:
+  usage-scenarios:
+    description: "활용 시나리오 제시"
+    items:
+      - 구현 완료 후 주요 활용 시나리오를 코드 예시로 보여줄 것
+      - 정상 케이스와 엣지 케이스를 모두 포함
+      - 기존 코드와의 하위호환성이 있다면 그 시나리오도 포함
+      - 시나리오는 실제 호출 코드와 예상 결과를 함께 보여줄 것
+
+  build-verification:
+    description: "빌드 검증"
+    items:
+      - 구현 완료 후 빌드(컴파일) 성공 확인
+      - 기존 테스트가 있으면 테스트 통과 확인
+
+  change-summary:
+    description: "변경 요약"
+    items:
+      - 변경된 파일 목록과 각 파일의 변경 내용 요약
+      - 하위호환성 영향 여부 명시
+
+  roadmap-sync:
+    description: "로드맵/상태 업데이트"
+    items:
+      - 마일스톤 또는 워크아이템 완료 시 ROADMAP.md의 해당 항목 상태를 즉시 갱신
+      - STATUS.md의 활성 작업, 최근 완료, 다음 우선순위를 함께 갱신
+      - 마일스톤 전체 완료 시 상위 마일스톤 상태도 갱신 (미시작/진행중 → ✅ 완료)
+      - 수치 테이블 (Wiring 미연결 등)이 있다면 정합성 맞출 것
+
+  doc-sync:
+    description: "문서 동기화"
+    trigger: |
+      다음 중 하나라도 해당하면 반드시 문서 동기화를 수행할 것:
+      - 커맨드 추가/삭제/변경
+      - 매니저 클래스 추가/삭제
+      - 디렉토리 구조 변경
+      - 마일스톤 완료
+    targets:
+      - file: CLAUDE.md (프로젝트)
+        sync: 커맨드 테이블, 주요 기능, 디렉토리 구조
+      - file: CLAUDE.md (워크스페이스)
+        sync: 주요 커맨드 테이블, Workbook 체계 섹션
+      - file: docs/USER-GUIDE.md
+        sync: 커맨드 카테고리별 테이블, 자연어 지원 테이블, 워크플로우 섹션
+      - file: docs/TECHNICAL.md
+        sync: 아키텍처 트리, 매니저 API, 설치 프로세스, 이벤트 계측 테이블
+    items:
+      - 커맨드 추가 시 4개 문서의 커맨드 테이블에 모두 반영
+      - 매니저 추가 시 TECHNICAL.md에 API 문서 추가
+      - 디렉토리 변경 시 CLAUDE.md와 USER-GUIDE.md의 구조도 갱신
+      - ROADMAP "현재 규모" 테이블은 build-index.ts가 자동 갱신하므로 수동 편집 금지
+      - verify-docs.ts로 카운트 정합성 최종 확인
+
+examples:
+  good:
+    - |
+      ## 활용 시나리오
+
+      ### 1. 기본 사용
+      ```typescript
+      const result = await feature.doSomething({ name: 'test' });
+      // → result: { success: true, name: 'test' }
+      ```
+
+      ### 2. 옵션 없이 호출 (하위호환)
+      ```typescript
+      const result = await feature.doSomething();
+      // → 기존과 동일하게 동작
+      ```
+  bad:
+    - "코드만 작성하고 활용 예시 없이 '완료했습니다'로 끝냄"
+    - "빌드 검증 없이 전달"
+    - "커맨드 3개를 추가하고 CLAUDE.md 커맨드 테이블은 갱신하지 않음"
+    - "매니저를 추가하고 TECHNICAL.md에 API 문서를 추가하지 않음"
+
+exceptions:
+  - 단순 버그 수정 (1-2줄 변경)은 시나리오 생략 가능
+  - 설정 파일 변경은 시나리오 대신 변경 전/후 비교로 대체
+
+created: "2026-02-07T00:00:00Z"
+updated: "2026-02-09T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

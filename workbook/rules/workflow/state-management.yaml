@@ -1,0 +1,106 @@
+# State Management Rule
+# 프로젝트 상태 관리 규칙
+
+id: state-management-001
+name: State Book
+description: |
+  워크스페이스 전체의 프로젝트 상태를 체계적으로 추적하는 규칙.
+  세션 시작/종료 시 상태 파일을 읽고 갱신하는 절차를 정의한다.
+  허브: `workbook/state/STATUS.md`
+
+category: workflow/state-management
+tags:
+  - state
+  - session
+  - tracking
+  - workspace
+
+severity: error
+
+rules:
+  session-start:
+    description: "세션 시작 절차"
+    items:
+      - "`workbook/state/STATUS.md`를 읽고 현재 상태 파악"
+      - "활성 작업(in-progress) 확인 — 이전 세션의 미완료 작업 이어받기"
+      - "작업 대상 프로젝트의 상태 파일 확인 (프로젝트별 상태 관리 방식 존중)"
+      - "보류 중인 결정 사항 확인"
+
+  session-end:
+    description: "세션 종료 절차"
+    items:
+      - "`workbook/state/STATUS.md` 갱신 — 활성 작업, 최근 세션, 다음 우선순위 업데이트"
+      - "`workbook/log/CHANGELOG.md`에 변경 사항 추가 (날짜 기반)"
+      - "`.workbook/sessions/`에 세션 로그 저장 (파일명: `YYYY-MM-DD-간략설명.md`)"
+      - "작업한 프로젝트의 상태 파일도 필요 시 갱신"
+
+  project-state-respect:
+    description: "프로젝트별 상태 관리 존중 (local-wins)"
+    items:
+      - "자체 상태 파일이 있는 프로젝트는 해당 파일로 관리 (참조만)"
+      - "프로젝트에 `workbook/` 강제 도입하지 않음 (점진적 도입)"
+      - "워크스페이스 STATUS.md에는 프로젝트별 상태 요약만 기록"
+
+  state-file-format:
+    description: "상태 파일 형식 규칙"
+    items:
+      - "STATUS.md — 활성 작업, 프로젝트 요약, 최근 세션, 보류 결정, 다음 우선순위"
+      - "ROADMAP.md — 마일스톤, 플랜, 체크리스트"
+      - "CHANGELOG.md — Keep a Changelog 형식 (날짜 기반, 버전 미사용)"
+      - "세션 로그 — 날짜, 작업 요약, 변경 파일, 다음 단계"
+
+  batch-update:
+    description: "상태 파일 일괄 갱신 규칙"
+    items:
+      - "ROADMAP, STATUS, CHANGELOG는 항상 함께 갱신한다 (하나만 갱신 금지)"
+      - "'로드맵 업데이트' 요청 시 ROADMAP.md + STATUS.md + CHANGELOG.md 3개를 일괄 갱신"
+      - "마일스톤 상태 변경 시 (완료, 새 마일스톤 시작) 반드시 3개 파일 동기화"
+      - "갱신 순서: ROADMAP (마일스톤 상태) → STATUS (활성 작업, 다음 우선순위) → CHANGELOG (변경 기록)"
+
+exceptions:
+  - "단순 질문이나 5분 이하의 짧은 작업은 세션 로그 생략 가능"
+  - "STATUS.md 갱신은 실질적인 변경이 있을 때만 수행"
+  - "사용자가 명시적으로 상태 갱신을 생략하라고 요청한 경우"
+
+examples:
+  good:
+    - |
+      # 세션 시작
+      AI: "workbook/state/STATUS.md를 확인하겠습니다."
+      → STATUS.md 읽기 → 활성 작업 파악 → 작업 시작
+    - |
+      # 세션 종료
+      AI: "세션 상태를 기록하겠습니다."
+      → STATUS.md 갱신 → CHANGELOG 추가 → 세션 로그 저장
+    - |
+      # 프로젝트 상태 존중
+      ralph/ 작업 시 → ralph/prd.json 참조
+      하위 프로젝트 작업 시 → 해당 프로젝트의 상태 파일 참조
+    - |
+      # 로드맵 일괄 갱신
+      사용자: "로드맵 업데이트해줘"
+      → ROADMAP.md 갱신 → STATUS.md 갱신 → CHANGELOG.md 갱신 (3개 일괄)
+  bad:
+    - "세션 시작 시 STATUS.md를 읽지 않고 바로 작업 시작"
+    - "세션 종료 시 상태 파일 갱신 없이 종료"
+    - "프로젝트 자체 상태 파일을 무시하고 워크스페이스 STATUS.md만 갱신"
+    - "단순 질문에도 세션 로그를 생성하여 불필요한 파일 생성"
+    - "ROADMAP.md만 갱신하고 STATUS.md, CHANGELOG.md는 갱신하지 않음"
+
+created: "2026-02-05T00:00:00Z"
+updated: "2026-02-10T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

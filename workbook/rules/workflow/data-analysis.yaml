@@ -1,0 +1,373 @@
+# Data Analysis Rule
+# 데이터 분석 원칙
+
+id: data-analysis-001
+name: 데이터 분석 원칙
+description: |
+  데이터 분석 작업 시 따라야 할 핵심 원칙.
+  데이터 탐색, 검증, 시각화, 인사이트 도출에 대한 가이드라인.
+
+category: workflow/data-analysis
+tags:
+  - data
+  - analysis
+  - visualization
+  - insight
+  - foundation
+
+severity: warning
+
+rules:
+  data-understanding:
+    description: "데이터 이해 원칙"
+    items:
+      - 분석 전 데이터 출처와 수집 방법 파악
+      - 각 컬럼의 의미와 단위 명확히 이해
+      - 데이터의 시간 범위와 갱신 주기 확인
+      - 누락값, 이상값의 발생 원인 파악
+
+  exploratory-analysis:
+    description: "탐색적 분석 원칙"
+    items:
+      - 가설 없이 먼저 데이터를 살펴보기
+      - 기술 통계(평균, 분포, 상관관계)부터 시작
+      - 시각화로 패턴과 이상치 발견
+      - 여러 각도에서 데이터 슬라이싱
+
+  data-quality:
+    description: "데이터 품질 원칙"
+    items:
+      - 분석 전 데이터 품질 검증 필수
+      - 누락값 처리 방법을 명시적으로 기록
+      - 이상값은 제거 전 원인 파악
+      - 데이터 전처리 과정을 재현 가능하게 문서화
+
+  hypothesis-driven:
+    description: "가설 기반 분석 원칙"
+    items:
+      - 분석 목적과 질문을 명확히 정의
+      - 가설을 먼저 세우고, 데이터로 검증
+      - 상관관계와 인과관계를 구분
+      - 반증 가능한 형태로 가설 수립
+
+  visualization:
+    description: "시각화 원칙"
+    items:
+      - 목적에 맞는 차트 유형 선택
+      - 축 레이블, 제목, 범례 명확히
+      - 비교 대상이 있으면 함께 표시
+      - 오해를 유발하는 시각화 지양 (잘린 Y축 등)
+
+  insight-delivery:
+    description: "인사이트 전달 원칙"
+    items:
+      - So What? 질문에 답하는 인사이트 도출
+      - 숫자에 맥락 부여 (좋은 건지, 나쁜 건지)
+      - 액션 가능한 형태로 결론 제시
+      - 분석의 한계와 가정을 명시
+
+  reproducibility:
+    description: "재현성 원칙"
+    items:
+      - 분석 코드는 버전 관리
+      - 환경과 의존성 명시 (requirements.txt)
+      - Raw 데이터를 보존하고 변환 기록
+      - 다른 사람이 같은 결과를 얻을 수 있도록
+
+  descriptive-statistics:
+    description: "기술 통계"
+    items:
+      - 중심 경향 - 평균, 중앙값, 최빈값
+      - 분산 - 표준편차, 분산, 범위, IQR
+      - 분포 형태 - 왜도(Skewness), 첨도(Kurtosis)
+      - 상관관계 - Pearson, Spearman 상관계수
+      - 평균 vs 중앙값 - 이상치 있으면 중앙값 선호
+
+  inferential-statistics:
+    description: "추론 통계"
+    items:
+      - 가설 검정 - 귀무가설, 대립가설 설정
+      - p-value - 유의수준(보통 0.05) 기준
+      - 신뢰구간 - 점추정보다 구간추정 선호
+      - 효과 크기 - p-value만으로 불충분, 실질적 의미 확인
+      - 표본 크기 - 충분한 검정력(Power) 확보
+
+  statistical-tests:
+    description: "통계 검정 선택"
+    items:
+      - 두 그룹 평균 비교 - t-test (정규분포), Mann-Whitney (비정규)
+      - 세 그룹 이상 - ANOVA, Kruskal-Wallis
+      - 비율 비교 - 카이제곱 검정
+      - 상관관계 - Pearson (연속), Spearman (순서)
+      - 시계열 - 자기상관, 정상성 검정
+
+  data-preprocessing:
+    description: "데이터 전처리"
+    items:
+      - 누락값 - 삭제, 평균/중앙값 대체, 보간, 모델 예측
+      - 이상값 - IQR, Z-score로 탐지, 원인 파악 후 처리
+      - 정규화 - Min-Max (0~1), Z-score (평균0, 표준편차1)
+      - 인코딩 - One-Hot (범주), Label (순서), Target (고카디널리티)
+      - 피처 엔지니어링 - 도메인 지식 기반 새 변수 생성
+
+  chart-selection:
+    description: "차트 선택 가이드"
+    items:
+      - 분포 확인 - 히스토그램, 박스플롯, 바이올린 플롯
+      - 시간에 따른 변화 - 라인 차트, 영역 차트
+      - 비교 - 바 차트 (범주), 그룹 바 차트 (범주 간 비교)
+      - 비율/구성 - 파이 차트 (5개 이하), 스택 바 차트
+      - 관계 - 산점도, 버블 차트, 히트맵 (상관관계)
+      - 순위 - 수평 바 차트, 롤리팝 차트
+
+  visualization-tips:
+    description: "시각화 팁"
+    items:
+      - 3D 차트 지양 - 왜곡 발생
+      - 파이 차트 - 5개 이하, 합이 100%일 때만
+      - Y축 0부터 시작 - 바 차트는 필수
+      - 색상 - 범주는 구분 색, 연속은 그라데이션
+      - 주석 - 핵심 포인트에 텍스트 추가
+      - 데이터-잉크 비율 - 불필요한 장식 제거
+
+  cohort-analysis:
+    description: "코호트 분석"
+    items:
+      - 시간 기반 그룹화 - 가입 시점별, 구매 시점별
+      - 리텐션 매트릭스 - 코호트별 시간 경과에 따른 행동
+      - 삼각형 히트맵 - 리텐션 시각화
+      - 코호트 비교 - 시간에 따른 개선/악화 추적
+      - 행동 코호트 - 첫 구매 상품, 유입 채널 등
+
+  funnel-analysis:
+    description: "퍼널 분석"
+    items:
+      - 단계 정의 - 사용자 여정의 핵심 단계
+      - 전환율 계산 - 각 단계 간 비율
+      - 이탈 지점 - 가장 큰 드랍이 어디인지
+      - 세분화 - 채널별, 디바이스별, 세그먼트별 퍼널
+      - 시간 고려 - 단계 간 소요 시간
+
+  ab-testing:
+    description: "A/B 테스트"
+    items:
+      - 가설 명확히 - 무엇을, 왜 테스트하는가
+      - 표본 크기 계산 - MDE, 유의수준, 검정력
+      - 무작위 배정 - 편향 없는 그룹 분배
+      - 하나의 변수만 - 동시에 여러 변경 X
+      - 충분한 기간 - 요일 효과, 노출 편향 고려
+      - 결과 해석 - 통계적 유의성 + 실질적 의미
+
+  segmentation:
+    description: "세그먼테이션"
+    items:
+      - RFM - Recency, Frequency, Monetary
+      - 행동 기반 - 활성/휴면, 충성/이탈 위험
+      - 인구통계 - 연령, 지역, 직업
+      - 클러스터링 - K-means, 계층적 군집화
+      - 페르소나 연결 - 세그먼트를 이해관계자가 이해할 수 있게
+
+  time-series:
+    description: "시계열 분석"
+    items:
+      - 트렌드 - 장기적 방향성
+      - 계절성 - 주기적 패턴 (주, 월, 년)
+      - 노이즈 - 무작위 변동
+      - 이동 평균 - 단기 변동 스무딩
+      - YoY, MoM, WoW - 기간 대비 비교
+      - 이상 탐지 - 예상 범위 벗어난 값
+
+  sql-tips:
+    description: "SQL 분석 팁"
+    items:
+      - WINDOW 함수 - ROW_NUMBER, RANK, LAG, LEAD, SUM OVER
+      - CTE (WITH절) - 복잡한 쿼리 가독성
+      - CASE WHEN - 조건부 집계
+      - DATE 함수 - DATE_TRUNC, DATE_DIFF, EXTRACT
+      - COALESCE - NULL 처리
+      - EXPLAIN - 쿼리 성능 분석
+
+  python-tips:
+    description: "Python 분석 팁"
+    items:
+      - pandas - df.groupby().agg(), df.pivot_table()
+      - 체이닝 - df.query().assign().groupby()
+      - 벡터화 - apply 대신 벡터 연산 선호
+      - 메모리 - dtypes 최적화, chunk 처리
+      - 시각화 - matplotlib (기본), seaborn (통계), plotly (인터랙티브)
+
+  analysis-pitfalls:
+    description: "분석 함정"
+    items:
+      - Simpson's Paradox - 전체와 부분의 결론이 반대
+      - Survivorship Bias - 살아남은 것만 분석
+      - 상관 ≠ 인과 - 상관관계를 인과로 해석
+      - p-hacking - 유의미한 결과 나올 때까지 조건 변경
+      - Cherry Picking - 원하는 결과만 선택
+      - 작은 표본 - 우연을 패턴으로 착각
+
+  analysis-communication:
+    description: "분석 결과 커뮤니케이션"
+    items:
+      - Executive Summary 먼저 - 핵심 인사이트 1-3개
+      - So What? - 비즈니스 임팩트로 번역
+      - 시각화 활용 - 숫자보다 그래프
+      - 불확실성 명시 - 신뢰구간, 가정, 한계
+      - 액션 제안 - 분석에서 끝내지 말고 다음 단계
+      - 청중 맞춤 - 경영진 vs 실무자 vs 기술팀
+
+  analysis-checklist:
+    description: "분석 체크리스트"
+    items:
+      - 1. 분석 목적/질문이 명확한가?
+      - 2. 데이터 출처와 수집 방법을 이해했는가?
+      - 3. 데이터 품질을 검증했는가?
+      - 4. 적절한 분석 방법을 선택했는가?
+      - 5. 가정이 명시되어 있는가?
+      - 6. 결과가 재현 가능한가?
+      - 7. 시각화가 오해 없이 명확한가?
+      - 8. 인사이트가 액션 가능한 형태인가?
+      - 9. 한계와 주의사항을 명시했는가?
+      - 10. 다음 단계/추가 분석이 제안되었는가?
+
+examples:
+  good:
+    - |
+      # 탐색적 분석 시작
+      1. df.info() - 데이터 타입, 누락값 확인
+      2. df.describe() - 기술 통계
+      3. 분포 시각화 (히스토그램, 박스플롯)
+      4. 상관관계 히트맵
+    - |
+      # 인사이트 전달
+      "이탈률이 30%로, 업계 평균(20%) 대비 높음.
+      특히 가입 후 7일 이내 이탈이 60%를 차지.
+      → 온보딩 개선이 최우선 과제"
+    - |
+      # 가설 기반 분석
+      가설: "프리미엄 사용자의 리텐션이 더 높다"
+      검증: 코호트별 리텐션 비교
+      결과: 유의미한 차이 없음 (p > 0.05)
+    - |
+      # 차트 선택 예시
+      Q: 월별 매출 추이는?
+      → 라인 차트 (시간에 따른 변화)
+
+      Q: 지역별 매출 비교는?
+      → 수평 바 차트 (범주 비교)
+
+      Q: 매출 구성은?
+      → 스택 바 차트 (비율 + 시간)
+
+      Q: 가격과 판매량 관계는?
+      → 산점도 (두 변수 관계)
+    - |
+      # 코호트 분석 리텐션 테이블
+                 Month 0  Month 1  Month 2  Month 3
+      Jan 2024   100%     45%      30%      25%
+      Feb 2024   100%     48%      33%      28%
+      Mar 2024   100%     52%      38%       -
+
+      인사이트: 온보딩 개선 후(Mar) 초기 리텐션 향상
+    - |
+      # 퍼널 분석
+      Landing Page:   10,000 (100%)
+      Sign Up:         2,500 (25%)  ← 75% 이탈
+      Activation:      1,500 (15%)  ← 40% 이탈
+      First Purchase:    500 (5%)   ← 67% 이탈
+
+      핵심 병목: Sign Up → Activation 구간
+      가설: 온보딩 프로세스가 복잡함
+    - |
+      # A/B 테스트 결과 보고
+      테스트: 결제 버튼 색상 (Blue vs Green)
+      기간: 2주 (1/1 ~ 1/14)
+      표본: Control 5,000 / Variant 5,000
+
+      결과:
+      - Control: 전환율 3.2% (160/5000)
+      - Variant: 전환율 3.8% (190/5000)
+      - 상대 향상: +18.7%
+      - p-value: 0.03 (유의)
+      - 95% CI: [1.2%, 36.5%]
+
+      결론: Green 버튼 전환율 유의미하게 높음
+      권장: 전체 적용 승인
+    - |
+      # SQL 코호트 분석 쿼리
+      WITH cohort AS (
+        SELECT
+          user_id,
+          DATE_TRUNC('month', first_purchase) AS cohort_month,
+          DATE_TRUNC('month', purchase_date) AS purchase_month
+        FROM purchases
+      )
+      SELECT
+        cohort_month,
+        purchase_month,
+        COUNT(DISTINCT user_id) AS users,
+        COUNT(DISTINCT user_id) * 100.0 /
+          FIRST_VALUE(COUNT(DISTINCT user_id))
+          OVER (PARTITION BY cohort_month ORDER BY purchase_month)
+          AS retention_pct
+      FROM cohort
+      GROUP BY 1, 2
+    - |
+      # Simpson's Paradox 예시
+      전체: A안 전환율 40%, B안 전환율 35% → A안 승리?
+
+      세분화:
+      모바일: A안 30%, B안 25% (A 승)
+      데스크톱: A안 50%, B안 45% (A 승)
+
+      하지만 B안이 모바일(저전환) 비중이 높았음
+      → 공정한 비교 위해 세그먼트별 분석 필요
+    - |
+      # Executive Summary 형식
+      ## 핵심 인사이트
+      1. 이탈률이 30%로 목표(20%) 대비 10%p 높음
+      2. 가입 후 7일 내 이탈이 전체의 60%
+      3. 푸시 알림 받은 사용자 이탈률 15%p 낮음
+
+      ## 권장 액션
+      1. [긴급] 온보딩 개선 - 7일 내 이탈 방지
+      2. [중요] 푸시 알림 Opt-in 유도
+      3. [검토] 이탈 예측 모델 개발
+
+      ## 다음 분석
+      - 이탈 사유 설문 분석
+      - 푸시 알림 내용별 효과 비교
+  bad:
+    - "데이터 품질 검증 없이 바로 분석"
+    - "상관관계를 인과관계로 해석"
+    - "결론만 제시, 분석 과정 없음"
+    - "재현 불가능한 일회성 분석"
+    - "3D 파이 차트로 비율 표시"
+    - "Y축 0에서 시작 안 하는 바 차트"
+    - "p-value만 보고 효과 크기 무시"
+    - "표본 크기 계산 없이 A/B 테스트 종료"
+    - "전체만 보고 세그먼트별 분석 안 함"
+    - "숫자만 나열, So What? 없음"
+
+exceptions:
+  - 실시간 의사결정 필요 시 간소화된 분석 허용
+  - 민감 데이터는 재현성보다 보안 우선
+  - 탐색적 분석 단계에서는 엄격한 가설 검증 불필요
+
+created: "2025-02-05T00:00:00Z"
+updated: "2025-02-05T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

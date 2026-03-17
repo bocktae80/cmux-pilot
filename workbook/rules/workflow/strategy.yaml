@@ -1,0 +1,296 @@
+# Strategy Rule
+# 전략 원칙
+
+id: strategy-001
+name: 전략 원칙
+description: |
+  전략적 사고와 의사결정 시 따라야 할 핵심 원칙.
+  분석, 판단, 실행, 피드백에 대한 가이드라인.
+
+category: workflow/strategy
+tags:
+  - strategy
+  - decision-making
+  - thinking
+  - analysis
+  - foundation
+
+severity: info
+
+rules:
+  situation-analysis:
+    description: "상황 분석 원칙"
+    items:
+      - 현재 상태를 객관적으로 파악 (As-Is)
+      - 외부 환경 분석 (시장, 경쟁, 트렌드)
+      - 내부 역량 분석 (강점, 약점, 자원)
+      - 데이터 기반 분석, 감에 의존하지 않기
+
+  goal-setting:
+    description: "목표 설정 원칙"
+    items:
+      - SMART 목표 (구체적, 측정 가능, 달성 가능, 관련성, 시한)
+      - 장기 비전과 단기 목표의 연결
+      - 목표 간 우선순위 명확히
+      - 성공과 실패의 기준 미리 정의
+
+  option-generation:
+    description: "대안 생성 원칙"
+    items:
+      - 최소 3개 이상의 대안 검토
+      - '"아무것도 안 함"도 대안으로 포함'
+      - 제약 조건 없이 먼저 브레인스토밍
+      - 다양한 관점(비용, 시간, 리스크) 고려
+
+  decision-making:
+    description: "의사결정 원칙"
+    items:
+      - 되돌릴 수 있는 결정은 빠르게
+      - 되돌리기 어려운 결정은 신중하게
+      - 트레이드오프를 명시적으로 기록
+      - 결정의 근거와 가정을 문서화
+
+  risk-management:
+    description: "리스크 관리 원칙"
+    items:
+      - 잠재적 리스크를 미리 식별
+      - 리스크별 발생 확률과 영향도 평가
+      - 대응 계획(Plan B) 수립
+      - 리스크를 기회로 전환할 수 있는지 검토
+
+  execution:
+    description: "실행 원칙"
+    items:
+      - 전략을 구체적 액션으로 분해
+      - 마일스톤과 중간 체크포인트 설정
+      - 책임자와 일정 명확히
+      - 실행 중 모니터링 지표 정의
+
+  learning:
+    description: "학습 원칙"
+    items:
+      - 정기적 회고 (무엇이 잘 됐고, 안 됐나)
+      - 실패에서 교훈 추출
+      - 가정이 틀렸으면 빠르게 수정 (Pivot)
+      - 학습 내용을 다음 전략에 반영
+
+  mental-models:
+    description: "사고 모델 (기본)"
+    items:
+      - First Principles - 기본 원리부터 다시 생각
+      - Second-Order Thinking - 결과의 결과 예측
+      - Inversion - 실패하려면 어떻게 해야 할까?
+      - Opportunity Cost - 선택하지 않은 것의 비용
+
+  mental-models-advanced:
+    description: "사고 모델 (심화)"
+    items:
+      - Circle of Competence - 내가 잘 아는 영역과 모르는 영역 구분
+      - Map is Not Territory - 모델/계획은 현실의 근사치일 뿐
+      - Hanlon's Razor - 악의보다 실수/무지를 먼저 의심
+      - Occam's Razor - 단순한 설명이 대체로 맞다
+      - Pareto Principle - 20%가 80% 결과를 만든다
+      - Margin of Safety - 예상보다 나쁠 때를 대비한 버퍼
+      - Sunk Cost - 이미 투자한 비용은 미래 결정에 영향 주면 안 됨
+      - Survivorship Bias - 실패 사례도 봐야 전체 그림이 보인다
+      - Confirmation Bias - 내 믿음을 확인하는 정보만 보려는 경향
+      - Anchoring - 처음 접한 숫자에 판단이 끌려감
+
+  analysis-frameworks:
+    description: "분석 프레임워크"
+    items:
+      - SWOT - 강점, 약점, 기회, 위협
+      - Porter's 5 Forces - 산업 경쟁 구조 분석
+      - PESTEL - 정치, 경제, 사회, 기술, 환경, 법률 외부 환경
+      - Value Chain - 가치 창출 활동 분해
+      - Jobs to be Done - 고객이 해결하려는 '할 일' 관점
+      - Business Model Canvas - 비즈니스 모델 9개 요소 시각화
+      - Ansoff Matrix - 시장/제품 신규/기존 조합으로 성장 전략
+
+  decision-frameworks:
+    description: "의사결정 프레임워크"
+    items:
+      - Eisenhower Matrix - 긴급/중요 2x2 매트릭스
+      - RICE - Reach, Impact, Confidence, Effort 점수화
+      - ICE - Impact, Confidence, Ease 점수화
+      - Weighted Decision Matrix - 기준별 가중치 부여 후 점수 합산
+      - Pre-mortem - "실패했다 가정하고, 왜 실패했는지" 역으로 분석
+      - 10/10/10 - 10분/10개월/10년 후에 이 결정을 어떻게 볼까?
+
+  strategic-thinking:
+    description: "전략적 사고 기법"
+    items:
+      - Zoom In/Out - 디테일과 큰 그림을 오가며 사고
+      - Red Team - 내 전략을 공격하는 역할로 검증
+      - Scenario Planning - 미래 시나리오 3~4개 그리고 각각 대비
+      - Assumption Mapping - 전략의 핵심 가정을 명시하고 검증 방법 설계
+      - Backcasting - 목표 달성 상태에서 역순으로 경로 설계
+      - Constraint Analysis - 진짜 제약과 가짜 제약 구분
+
+  bias-avoidance:
+    description: "편향 회피"
+    items:
+      - 반대 의견을 적극적으로 찾기
+      - 숫자로 표현하여 모호함 제거
+      - 의사결정 전 기준을 먼저 정하기
+      - 익명 투표로 권위/동조 효과 제거
+      - 시간을 두고 결정 (즉흥 결정 피하기)
+      - 외부 관점 (아웃사이더에게 물어보기)
+
+  communication-strategy:
+    description: "전략 커뮤니케이션"
+    items:
+      - 한 문장으로 요약할 수 있어야 함
+      - Why → What → How 순서로 설명
+      - 청중별 맞춤 메시지 (경영진 vs 실무자)
+      - 반대 의견/리스크도 함께 제시 (신뢰 확보)
+      - 숫자와 스토리를 함께 사용
+
+  strategy-checklist:
+    description: "전략 수립 체크리스트"
+    items:
+      - 1. 문제/기회가 명확히 정의되었는가?
+      - 2. 현재 상태(As-Is)를 객관적으로 파악했는가?
+      - 3. 목표 상태(To-Be)가 구체적인가?
+      - 4. 핵심 가정은 무엇이고, 검증 가능한가?
+      - 5. 최소 3개 대안을 검토했는가?
+      - 6. 트레이드오프를 명시했는가?
+      - 7. 리스크와 대응책이 있는가?
+      - 8. 성공/실패 기준이 정의되었는가?
+      - 9. 실행 계획이 구체적인가?
+      - 10. 회고/피드백 시점이 정해졌는가?
+
+  competitive-strategy:
+    description: "경쟁 전략"
+    items:
+      - 경쟁하지 않을 곳을 정하는 것이 더 중요
+      - 경쟁 우위는 지속 가능해야 의미 있음
+      - 빠른 추종자(Fast Follower)도 유효한 전략
+      - 차별화는 고객이 가치 있게 느끼는 것이어야
+      - 진입 장벽을 만들거나 회피하는 전략 구분
+
+  resource-allocation:
+    description: "자원 배분 원칙"
+    items:
+      - 모든 것에 투자하면 아무것도 안 됨 (선택과 집중)
+      - 70-20-10 - 핵심 70%, 성장 20%, 실험 10%
+      - 기회비용을 항상 고려
+      - 몰빵보다 포트폴리오 사고
+      - 투자 대비 회수(ROI) 관점으로 우선순위
+
+  timing-strategy:
+    description: "타이밍 전략"
+    items:
+      - First Mover vs Fast Follower 장단점 이해
+      - 너무 이르면 시장이 없고, 너무 늦으면 경쟁이 치열
+      - Window of Opportunity - 기회의 창이 열려있을 때 움직이기
+      - 시장/기술 성숙도 판단 (Gartner Hype Cycle)
+      - 지금 안 하면 어떻게 되는가? (urgency 판단)
+
+examples:
+  good:
+    - |
+      # 상황 분석 (SWOT)
+      강점: 기술력, 빠른 개발
+      약점: 마케팅 부족, 자원 제한
+      기회: 시장 성장, 경쟁사 공백
+      위협: 대기업 진출, 규제 변화
+    - |
+      # 대안 평가
+      A안: 직접 개발 (시간↑, 비용↑, 통제↑)
+      B안: 외주 개발 (시간↓, 비용↓, 통제↓)
+      C안: 기존 솔루션 도입 (시간↓↓, 비용 중간, 통제↓↓)
+      → 핵심 역량 고려하여 A안 선택
+    - |
+      # Second-Order Thinking
+      1차: 가격 인하 → 판매량 증가
+      2차: → 경쟁사도 가격 인하 → 마진 감소
+      3차: → 가격 경쟁 → 시장 전체 수익성 악화
+      → 가격 외 차별화 전략 필요
+    - |
+      # Pre-mortem 분석
+      "6개월 후 이 프로젝트가 실패했다. 왜?"
+      - 핵심 인력이 이탈했다
+      - 기술적 난이도를 과소평가했다
+      - 시장 타이밍을 놓쳤다
+      - 예산이 부족했다
+      → 각 원인에 대한 사전 대응책 수립
+    - |
+      # Inversion 사고
+      Q: "성공하려면 어떻게 해야 할까?"
+      역전: "확실히 실패하려면 어떻게 해야 할까?"
+      - 고객 피드백 무시
+      - 팀 커뮤니케이션 단절
+      - 일정만 맞추고 품질 무시
+      - 경쟁사 동향 무시
+      → 이것들을 피하면 성공 확률 상승
+    - |
+      # Eisenhower Matrix 적용
+      긴급+중요: 프로덕션 버그 수정 → 지금 당장
+      중요+비긴급: 기술 부채 해소 → 일정 잡아서
+      긴급+비중요: 급한 미팅 요청 → 위임하거나 거절
+      비긴급+비중요: SNS 확인 → 제거
+    - |
+      # Assumption Mapping
+      가정 1: "고객은 이 기능을 원한다" (확신도: 중)
+        → 검증: 10명 인터뷰, 랜딩페이지 사전예약
+      가정 2: "3개월 내 개발 가능하다" (확신도: 하)
+        → 검증: 2주 스파이크로 기술 검증
+      가정 3: "단가 5만원에 팔 수 있다" (확신도: 하)
+        → 검증: 경쟁사 가격 조사, 지불의향 설문
+    - |
+      # Scenario Planning
+      시나리오 A (낙관): 시장 2배 성장, 점유율 30% 달성
+        → 공격적 투자, 인력 확충
+      시나리오 B (기본): 시장 20% 성장, 점유율 15%
+        → 현재 계획 유지
+      시나리오 C (비관): 시장 정체, 대기업 진출
+        → 니치 시장 집중, 비용 절감
+      → 각 시나리오별 트리거와 대응 계획 수립
+    - |
+      # 10/10/10 Rule
+      Q: "이 투자를 해야 할까?"
+      10분 후: 불안하고 걱정될 것
+      10개월 후: 결과가 나오기 시작, 배움이 있을 것
+      10년 후: 안 했으면 후회했을 것
+      → 장기적 관점에서 의미있으므로 진행
+    - |
+      # 전략 한 문장 요약
+      "B2B SaaS 고객 중 연매출 10억 이상 제조업에 집중하여,
+      재고 관리 자동화로 경쟁사 대비 30% 비용 절감을 제공한다"
+      (Who → What → How → Why Better)
+  bad:
+    - "직감으로 결정하고 근거 없음"
+    - "한 가지 대안만 검토"
+    - "리스크 무시하고 낙관적 계획만"
+    - "회고 없이 같은 실수 반복"
+    - "모든 것이 다 중요하다 (우선순위 없음)"
+    - "경쟁사가 하니까 우리도 한다"
+    - "이미 투자했으니 계속 간다 (Sunk Cost Fallacy)"
+    - "성공 사례만 보고 따라함 (Survivorship Bias)"
+    - "반대 의견을 무시하거나 배제"
+    - "전략을 세우고 실행 계획 없음"
+    - "목표 없이 일단 시작"
+
+exceptions:
+  - 시간이 극히 제한된 위기 상황
+  - 이미 검증된 반복 작업
+  - 되돌리기 쉽고 영향이 작은 결정
+
+created: "2025-02-05T00:00:00Z"
+updated: "2025-02-05T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

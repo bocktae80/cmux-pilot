@@ -1,0 +1,274 @@
+# Testing Rule
+# 테스트 엔지니어 원칙
+
+id: testing-001
+name: 테스트 엔지니어 원칙
+description: |
+  테스트 전문 엔지니어 역할 수행 시 따라야 할 핵심 원칙.
+  테스트 전략, 자동화 플로우, 시나리오 설계, TC 설계에 대한 가이드라인.
+
+category: workflow/testing
+tags:
+  - testing
+  - qa
+  - automation
+  - test-design
+  - quality-assurance
+
+severity: warning
+
+rules:
+  # === 테스트 전략 ===
+  test-strategy-pyramid:
+    description: "테스트 피라미드 원칙"
+    items:
+      - Unit Tests (70%) - 빠르고 격리된 단위 테스트가 기반
+      - Integration Tests (20%) - 컴포넌트 간 상호작용 검증
+      - E2E Tests (10%) - 핵심 사용자 플로우만 커버
+      - 피라미드를 뒤집지 말 것 - E2E 과다는 느리고 취약한 테스트 스위트
+
+  test-strategy-principles:
+    description: "테스트 전략 수립 원칙"
+    items:
+      - 리스크 기반 테스트 - 비즈니스 임팩트 높은 기능 우선
+      - 비용 대비 효과 분석 - 모든 것을 테스트할 수 없음
+      - Shift Left - 결함은 일찍 발견할수록 비용 저렴
+      - 테스트 범위(Scope) 명확히 정의 - In-Scope / Out-of-Scope
+      - 환경별 테스트 전략 차별화 (Dev/Staging/Prod)
+
+  test-coverage-guidelines:
+    description: "테스트 커버리지 가이드라인"
+    items:
+      - 커버리지 % 숫자에 집착하지 말 것 - 의미 있는 테스트가 우선
+      - 핵심 비즈니스 로직 100% 커버 목표
+      - Happy Path + Edge Cases + Error Cases 균형
+      - 새 기능은 반드시 테스트와 함께 (테스트 없는 코드 머지 금지)
+      - 버그 수정 시 회귀 테스트 추가 필수
+
+  # === 테스트 케이스 설계 ===
+  tc-design-techniques:
+    description: "테스트 케이스 설계 기법"
+    items:
+      - 동등 분할(Equivalence Partitioning) - 대표값으로 그룹 테스트
+      - 경계값 분석(Boundary Value Analysis) - 경계에서 버그 발생
+      - 결정 테이블(Decision Table) - 조건 조합 체계적 분석
+      - 상태 전이(State Transition) - 상태 변화 시나리오 커버
+      - 페어와이즈(Pairwise) - 조합 폭발 시 효율적 조합 선택
+
+  tc-structure:
+    description: "테스트 케이스 구조"
+    items:
+      - TC ID - 고유 식별자 (예: TC-LOGIN-001)
+      - 제목 - 무엇을 검증하는지 명확히
+      - 사전 조건(Preconditions) - 테스트 수행 전 상태
+      - 테스트 단계(Steps) - 상세하고 재현 가능하게
+      - 기대 결과(Expected Result) - 명확한 Pass/Fail 기준
+      - 테스트 데이터(Test Data) - 필요한 입력값 명시
+      - 우선순위(Priority) - P1(Critical) ~ P4(Low)
+
+  tc-naming-convention:
+    description: "테스트 네이밍 컨벤션"
+    items:
+      - "should_[예상동작]_when_[조건] 형식 권장"
+      - "한눈에 무엇을 테스트하는지 파악 가능해야 함"
+      - "테스트 실패 시 이름만으로 문제 영역 식별 가능"
+      - "test, spec 접두사는 프레임워크 컨벤션 따름"
+
+  tc-boundary-values:
+    description: "경계값 체크리스트"
+    items:
+      - 숫자 - 0, 1, -1, MAX, MIN, MAX+1, MIN-1
+      - 문자열 - 빈 문자열, 공백만, 최대 길이, 최대+1
+      - 배열 - 빈 배열, 단일 요소, 최대 요소
+      - 날짜 - 시작일, 종료일, 윤년, 월말, 타임존
+      - null/undefined/NaN 처리
+
+  # === 테스트 시나리오 설계 ===
+  scenario-design:
+    description: "테스트 시나리오 설계 원칙"
+    items:
+      - 사용자 스토리 기반 - "As a [사용자], I want [기능], so that [가치]"
+      - Happy Path 먼저, Alternative Path, Exception Path 순서
+      - End-to-End 흐름 - 실제 사용자 여정 시뮬레이션
+      - 데이터 플로우 - 입력 → 처리 → 출력 → 저장 추적
+      - 사용자 페르소나별 시나리오 분리
+
+  scenario-prioritization:
+    description: "시나리오 우선순위"
+    items:
+      - P1 - 핵심 비즈니스 플로우 (결제, 회원가입 등)
+      - P2 - 자주 사용되는 기능
+      - P3 - 에러/예외 처리
+      - P4 - 엣지 케이스, 드문 시나리오
+      - 우선순위에 따른 자동화 대상 선정
+
+  # === 테스트 자동화 ===
+  automation-principles:
+    description: "테스트 자동화 원칙"
+    items:
+      - 자동화할 가치 있는 테스트 선별 - 반복, 회귀, 스모크
+      - 유지보수 비용 고려 - 자동화가 항상 정답은 아님
+      - 안정성(Flakiness) 관리 - 불안정한 테스트는 신뢰 훼손
+      - 병렬 실행 가능하게 설계 - 테스트 간 독립성
+      - 실행 시간 최적화 - CI 파이프라인 병목 방지
+
+  automation-architecture:
+    description: "테스트 자동화 아키텍처"
+    items:
+      - Page Object Model (POM) - UI 테스트 유지보수성
+      - Test Fixtures - 테스트 데이터 관리
+      - Test Hooks - setup/teardown 로직 분리
+      - Custom Matchers - 도메인 특화 검증
+      - Test Utilities - 공통 헬퍼 함수
+
+  automation-best-practices:
+    description: "자동화 모범 사례"
+    items:
+      - 테스트 데이터는 테스트가 생성/정리 (Self-contained)
+      - 하드코딩된 Wait/Sleep 지양 - 명시적 대기 사용
+      - 테스트 간 상태 공유 금지 - 격리된 실행
+      - Retry 로직은 신중하게 - Flaky 테스트 숨김 방지
+      - 스크린샷/로그 - 실패 시 디버깅 자료 자동 수집
+
+  automation-anti-patterns:
+    description: "자동화 안티패턴"
+    items:
+      - Sleepy Tests - 고정 시간 대기 (setTimeout, sleep)
+      - Flaky Tests - 랜덤 실패하는 테스트 방치
+      - Ice Cream Cone - E2E 테스트 과다, Unit 부족
+      - Shared State - 테스트 간 데이터/상태 의존
+      - Test Code Smell - 프로덕션 코드만큼 품질 관리 안 함
+      - 100% 자동화 집착 - 수동 테스트도 가치 있음
+
+  # === CI/CD 테스트 통합 ===
+  ci-test-integration:
+    description: "CI/CD 테스트 통합"
+    items:
+      - PR마다 Unit/Integration 테스트 실행
+      - E2E는 Nightly 또는 Release 전 실행
+      - 테스트 실패 시 머지 차단 (Required Check)
+      - 테스트 리포트 자동 게시 (Coverage, 실패 목록)
+      - 성능 테스트는 별도 파이프라인
+
+  test-environments:
+    description: "테스트 환경 관리"
+    items:
+      - 환경별 테스트 데이터 분리
+      - Mock/Stub 전략 - 외부 의존성 격리
+      - 컨테이너화된 테스트 환경 - 일관성 보장
+      - 테스트 환경 프로비저닝 자동화
+      - 프로덕션 유사 환경(Staging)에서 E2E 실행
+
+  # === 테스트 리포트/메트릭 ===
+  test-reporting:
+    description: "테스트 리포트"
+    items:
+      - 실행 결과 (Pass/Fail/Skip 개수)
+      - 코드 커버리지 리포트
+      - 실패 테스트 상세 (에러 메시지, 스택 트레이스)
+      - 실행 시간 트렌드
+      - Flaky 테스트 식별 및 추적
+
+  quality-metrics:
+    description: "품질 메트릭"
+    items:
+      - 결함 밀도(Defect Density) - 코드 라인당 버그 수
+      - 결함 탈출률(Defect Escape Rate) - 프로덕션까지 간 버그
+      - 테스트 커버리지 트렌드
+      - Mean Time To Detect (MTTD) - 버그 발견까지 시간
+      - Test-to-Code Ratio - 테스트 코드 비율
+
+examples:
+  good:
+    - |
+      # 좋은 TC 구조
+      TC-CHECKOUT-001: 유효한 결제 정보로 주문 완료
+      - Preconditions: 로그인 상태, 장바구니에 상품 1개 이상
+      - Steps:
+        1. 장바구니 페이지에서 '결제하기' 클릭
+        2. 배송지 정보 입력
+        3. 결제 수단 선택 (신용카드)
+        4. 카드 정보 입력
+        5. '주문 완료' 클릭
+      - Expected: 주문 완료 페이지 표시, 주문번호 발급
+      - Test Data: 테스트 카드 4242-4242-4242-4242
+      - Priority: P1
+    - |
+      # 좋은 테스트 네이밍
+      describe('calculateDiscount', () => {
+        it('should_return_10_percent_off_when_purchase_over_100', () => {});
+        it('should_return_0_when_purchase_under_50', () => {});
+        it('should_throw_error_when_amount_is_negative', () => {});
+      });
+    - |
+      # Page Object Model
+      class LoginPage {
+        private emailInput = '[data-testid="email"]';
+        private passwordInput = '[data-testid="password"]';
+        private submitBtn = '[data-testid="login-submit"]';
+
+        async login(email: string, password: string) {
+          await this.page.fill(this.emailInput, email);
+          await this.page.fill(this.passwordInput, password);
+          await this.page.click(this.submitBtn);
+        }
+      }
+    - |
+      # 경계값 테스트
+      describe('validateAge', () => {
+        it('should_accept_age_0', () => {}); // 최소 경계
+        it('should_accept_age_150', () => {}); // 최대 경계
+        it('should_reject_age_-1', () => {}); // 최소 미만
+        it('should_reject_age_151', () => {}); // 최대 초과
+      });
+    - |
+      # 명시적 대기 (좋음)
+      await page.waitForSelector('[data-testid="result"]', { timeout: 5000 });
+  bad:
+    - |
+      # 나쁜 테스트 네이밍
+      it('test1', () => {});
+      it('works', () => {});
+      it('checkout test', () => {});
+    - |
+      # 하드코딩된 Sleep (나쁨)
+      await click('#submit');
+      await sleep(3000);  // 무조건 3초 대기
+      expect(result).toBe(true);
+    - |
+      # 테스트 간 상태 의존 (나쁨)
+      let createdUserId;  // 전역 변수로 공유
+
+      it('creates user', () => {
+        createdUserId = createUser();
+      });
+
+      it('updates user', () => {
+        updateUser(createdUserId);  // 이전 테스트에 의존
+      });
+    - "E2E 테스트만 있고 Unit 테스트 없음"
+    - "실패해도 무시하는 테스트 (@skip, .only 남용)"
+    - "하드코딩된 테스트 데이터가 프로덕션 DB에 의존"
+
+exceptions:
+  - 긴급 핫픽스 시 테스트 나중에 추가 (티켓으로 추적)
+  - 탐색적 테스트(Exploratory Testing) - 문서화 선택적
+  - 프로토타입/PoC - 테스트 생략 가능
+
+created: "2025-02-06T00:00:00Z"
+updated: "2025-02-06T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true

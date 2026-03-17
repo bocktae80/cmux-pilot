@@ -1,0 +1,114 @@
+# Architecture Convention Rule
+# 아키텍처 컨벤션 (범용)
+
+id: architecture-convention-001
+name: 아키텍처 컨벤션
+description: |
+  모듈 구조, 의존성 방향, 관심사 분리 등 아키텍처 설계 시 따라야 할 범용 규칙.
+  프로젝트별 레이어 구조는 하위 프로젝트에서 local-wins로 오버라이드한다.
+
+category: conventions/architecture
+tags:
+  - architecture
+  - layer
+  - dependency
+  - module
+  - convention
+
+severity: error
+
+claude_summary:
+  - "**의존성 방향**: 상위 → 하위만 허용, 역방향 import 금지"
+  - "**순환 참조**: 모듈 간 순환 import 금지"
+  - "**모듈 경계**: 진입점은 index.ts만, 내부 구현 직접 import 금지"
+  - "**관심사 분리**: UI/비즈니스 로직/데이터 접근 혼재 금지"
+
+rules:
+  dependency_direction:
+    description: "의존성 방향 규칙"
+    items:
+      - "상위 레이어에서 하위 레이어로만 import 허용"
+      - "역방향 import 금지 (하위 → 상위)"
+      - "같은 레이어 내 import는 모듈 경계를 통해서만 허용"
+      - "의존성 역전이 필요하면 인터페이스/추상 타입으로 해결"
+
+  circular_reference:
+    description: "순환 참조 방지 규칙"
+    items:
+      - "모듈 A → B → A 형태의 순환 import 금지"
+      - "순환이 감지되면 공통 모듈(shared)로 의존성 추출"
+      - "이벤트 기반 통신으로 간접 의존 해결 가능"
+
+  module_boundary:
+    description: "모듈 경계 규칙"
+    items:
+      - "모듈의 공개 API는 index.ts(barrel export)로만 노출"
+      - "외부에서 모듈 내부 파일 직접 import 금지"
+      - "예: import { UserService } from '@/user' (O)"
+      - "예: import { UserService } from '@/user/services/user-service' (X)"
+
+  separation_of_concerns:
+    description: "관심사 분리 규칙"
+    items:
+      - "UI 컴포넌트에 비즈니스 로직 포함 금지"
+      - "비즈니스 로직에 데이터베이스 쿼리 직접 포함 금지"
+      - "한 파일이 3개 이상의 관심사를 다루면 분리 필요"
+      - "프레젠테이션 / 도메인 / 인프라 레이어 분리"
+
+  shared_code:
+    description: "공유 코드 규칙"
+    items:
+      - "공유 코드는 shared/ 또는 common/ 디렉토리에 위치"
+      - "공유 코드에 특정 레이어의 로직 포함 금지"
+      - "공유 코드는 유틸리티, 타입, 상수만 포함"
+      - "2개 이상 모듈에서 사용될 때만 shared로 이동"
+
+examples:
+  good:
+    - |
+      // 올바른 의존성 방향
+      // presentation → domain → infrastructure
+      // presentation/UserPage.tsx
+      import { useUser } from '@/domain/user';
+    - |
+      // 올바른 모듈 경계
+      import { AuthService } from '@/auth';           // index.ts를 통해
+    - |
+      // 올바른 공유 코드
+      // shared/types.ts — 순수 타입만
+      export interface Pagination { page: number; limit: number; }
+  bad:
+    - |
+      // 역방향 import
+      // infrastructure/database.ts
+      import { UserPage } from '@/presentation/UserPage';  // 금지!
+    - |
+      // 내부 파일 직접 import
+      import { hash } from '@/auth/utils/crypto';    // 금지! → @/auth로
+    - |
+      // 관심사 혼재
+      // components/UserCard.tsx 안에서
+      const user = await db.query('SELECT * FROM users');  // 금지!
+
+exceptions:
+  - "테스트 파일에서는 내부 모듈 직접 import 허용 (단위 테스트 목적)"
+  - "마이그레이션 스크립트/시드 파일은 레이어 규칙에서 제외"
+  - "CLI 엔트리포인트는 모든 레이어에 접근 가능"
+
+created: "2025-02-13T00:00:00Z"
+updated: "2025-02-13T00:00:00Z"
+scope: workspace
+enabled: true
+
+metadata:
+  version: "1.0.0"
+  status: active
+  author: "@kent"
+  source: builtin
+
+platforms:
+  cursor:
+    enabled: true
+    includeInRules: true
+  claude:
+    enabled: true
