@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 # cmux-ws-manager.sh — 워크스페이스 save/restore/new/list 핵심 로직
 # source this file: source "$(dirname "$0")/../lib/cmux-ws-manager.sh"
 
@@ -139,7 +139,7 @@ def run(cmd):
     except:
         return ''
 
-raw = '''${raw}'''
+raw = sys.argv[1]
 workspaces = []
 
 # session-map.jsonl 로딩 (workspace_id별 인덱스 + 이름 역조회)
@@ -319,15 +319,15 @@ for line in raw.strip().split('\n'):
 
 kst = timezone(timedelta(hours=9))
 result = {
-    'version': 1,
+    'version': 2,
     'saved_at': datetime.now(kst).isoformat(),
     'workspaces': workspaces
 }
 
 json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
-" > "$output"
+" "$raw" > "$output"
 
-  echo "저장 완료: $output ($(python3 -c "import json; d=json.load(open('$output')); print(len(d.get('workspaces',[])))")개 워크스페이스)"
+  echo "저장 완료: $output ($(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(len(d.get('workspaces',[])))" "$output")개 워크스페이스)"
 }
 
 # ============================================================
@@ -342,7 +342,7 @@ cmux_ws_restore() {
   fi
 
   local count
-  count=$(python3 -c "import json; d=json.load(open('$input')); print(len(d.get('workspaces',[])))")
+  count=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(len(d.get('workspaces',[])))" "$input")
 
   if [[ "$count" == "0" ]]; then
     echo "복원할 워크스페이스가 없습니다."
@@ -395,53 +395,58 @@ print(entry)
     # status 복원
     if [[ -n "$status_json" && "$status_json" != "[]" ]]; then
       python3 -c "
-import subprocess, json
-items = json.loads('$status_json')
+import subprocess, json, sys, shlex
+items = json.loads(sys.argv[1])
+uuid = sys.argv[2]
 for item in items:
     key = item.get('key','')
     value = item.get('value','')
     color = item.get('color','')
     if key and value:
-        cmd = f'cmux set-status \"{key}\" \"{value}\"'
+        cmd = ['cmux', 'set-status', key, value]
         if color:
-            cmd += f' --color \"{color}\"'
-        cmd += f' --workspace $uuid'
-        subprocess.run(cmd, shell=True, capture_output=True)
-" 2>/dev/null || true
+            cmd += ['--color', color]
+        cmd += ['--workspace', uuid]
+        subprocess.run(cmd, capture_output=True)
+" "$status_json" "$uuid" 2>/dev/null || true
     fi
 
     # panels 복원 (terminal은 이미 생성됨, browser만 추가)
     if [[ -n "$panels_json" && "$panels_json" != "[]" ]]; then
       python3 -c "
-import subprocess, json
-panels = json.loads('$panels_json')
+import subprocess, json, sys
+panels = json.loads(sys.argv[1])
+uuid = sys.argv[2]
 for panel in panels:
     if panel.get('type') == 'browser' and panel.get('url'):
         direction = panel.get('direction', 'right')
         url = panel['url']
-        cmd = f'cmux new-pane --type browser --direction {direction} --url \"{url}\" --workspace $uuid'
-        subprocess.run(cmd, shell=True, capture_output=True)
-" 2>/dev/null || true
+        subprocess.run(['cmux', 'new-pane', '--type', 'browser', '--direction', direction, '--url', url, '--workspace', uuid], capture_output=True)
+" "$panels_json" "$uuid" 2>/dev/null || true
     fi
 
     # Claude Code 세션 자동 resume (claude_sessions 배열)
     if [[ -n "$sessions_json" && "$sessions_json" != "[]" ]]; then
       python3 -c "
-import subprocess, json, time, re
+import subprocess, json, time, re, sys, shlex
 
 def run(cmd):
     try:
-        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
+        if isinstance(cmd, list):
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+        else:
+            r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
         return r.stdout.strip()
     except:
         return ''
 
-sessions = json.loads('$sessions_json')
-uuid = '$uuid'
-cwd = '$cwd'
+sessions = json.loads(sys.argv[1])
+uuid = sys.argv[2]
+cwd = sys.argv[3]
+name = sys.argv[4]
 
 # 현재 워크스페이스의 terminal surface 목록
-panels_raw = run(f'cmux list-panels --workspace {uuid}')
+panels_raw = run(['cmux', 'list-panels', '--workspace', uuid])
 surfaces = []
 if panels_raw:
     for pline in panels_raw.strip().split('\n'):
@@ -458,10 +463,10 @@ for i, session in enumerate(sessions):
         surf_ref = surfaces[i]
     else:
         # surface 부족 → 새로 생성
-        new_cmd = f'cmux new-pane --type terminal --workspace {uuid}'
+        new_args = ['cmux', 'new-pane', '--type', 'terminal', '--workspace', uuid]
         if cwd:
-            new_cmd += f\" --command \\\"cd '{cwd}' && zsh\\\"\"
-        new_raw = run(new_cmd)
+            new_args += ['--command', f\"cd '{cwd}' && zsh\"]
+        new_raw = run(new_args)
         surf_match = re.search(r'(surface:\d+)', new_raw) if new_raw else None
         if surf_match:
             surf_ref = surf_match.group(1)
@@ -473,9 +478,11 @@ for i, session in enumerate(sessions):
     # resume 명령 전송
     time.sleep(0.3)
     if cwd:
-        run(f\"cmux send-keys --surface {surf_ref} -- \\\"cd '{cwd}'\\n\\\"\")
+        run(['cmux', 'send', '--surface', surf_ref, f\"cd '{cwd}'\"])
+        run(['cmux', 'send-key', '--surface', surf_ref, 'Return'])
         time.sleep(0.3)
-    run(f'cmux send-keys --surface {surf_ref} -- \"{resume_cmd}\n\"')
+    run(['cmux', 'send', '--surface', surf_ref, resume_cmd])
+    run(['cmux', 'send-key', '--surface', surf_ref, 'Return'])
     print(f'    resume: {surf_ref} → {resume_cmd}')
     time.sleep(0.5)
 
@@ -486,7 +493,7 @@ for i, session in enumerate(sessions):
     map_path = os.path.expanduser('~/.config/cmux-pilot/session-map.jsonl')
 
     # surface UUID 추출 (sidebar-state에서)
-    sidebar = run(f'cmux sidebar-state --surface {surf_ref}')
+    sidebar = run(['cmux', 'sidebar-state', '--surface', surf_ref])
     surface_uuid = ''
     for sline in sidebar.split('\n'):
         if sline.startswith('id='):
@@ -497,21 +504,21 @@ for i, session in enumerate(sessions):
             'type': 'session_start',
             'surface_id': surface_uuid,
             'workspace_id': uuid,
-            'workspace_name': '$name',
+            'workspace_name': name,
             'session_id': session_id,
             'cwd': cwd,
             'timestamp': datetime.now(kst).isoformat()
         }, ensure_ascii=False)
         with open(map_path, 'a') as f:
             f.write(entry + '\n')
-" 2>/dev/null || true
+" "$sessions_json" "$uuid" "$cwd" "$name" 2>/dev/null || true
     fi
 
     ((restored++))
     echo "    OK: $name ($uuid)"
   done < <(python3 -c "
 import json, sys
-d = json.load(open('$input'))
+d = json.load(open(sys.argv[1]))
 for ws in d.get('workspaces', []):
     name = ws.get('name', 'unnamed')
     cwd = ws.get('cwd', '')
@@ -524,7 +531,7 @@ for ws in d.get('workspaces', []):
     # old_workspace_id for workspace_restored record
     old_wid = ws.get('workspace_id', '')
     print(f'{name}\t{cwd}\t{status}\t{panels}\t{sessions_json}\t{old_wid}')
-")
+" "$input")
 
   echo ""
   echo "복원 완료: 성공 ${restored}개, 실패 ${failed}개"

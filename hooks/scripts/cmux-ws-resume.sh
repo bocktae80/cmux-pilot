@@ -40,13 +40,16 @@ for arg in "$@"; do
   esac
 done
 
-python3 -c "
+CMUX_FORCE="$FORCE" CMUX_DRY_RUN="$DRY_RUN" CMUX_SAVE_FILE="$SAVE_FILE" CMUX_SESSION_MAP="$SESSION_MAP" python3 -c "
 import subprocess, json, sys, os, time, re
 from datetime import datetime, timezone, timedelta
 
 def run(cmd, timeout=5):
     try:
-        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        if isinstance(cmd, list):
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        else:
+            r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
         return r.stdout.strip()
     except:
         return ''
@@ -64,11 +67,13 @@ def is_shell_prompt(screen_text):
         return False  # Claude Code UI
     return True
 
-force = '$FORCE' == 'true'
-dry_run = '$DRY_RUN' == 'true'
+force = os.environ.get('CMUX_FORCE', '') == 'true'
+dry_run = os.environ.get('CMUX_DRY_RUN', '') == 'true'
+save_file = os.environ.get('CMUX_SAVE_FILE', '')
+session_map_file = os.environ.get('CMUX_SESSION_MAP', '')
 
 # 저장 파일 로드
-with open('$SAVE_FILE') as f:
+with open(save_file) as f:
     saved = json.load(f)
 
 saved_workspaces = saved.get('workspaces', [])
@@ -78,7 +83,7 @@ if not saved_workspaces:
 
 # session-map에서 last_active 수집
 last_active_map = {}  # session_id → latest timestamp
-session_map_path = os.path.expanduser('$SESSION_MAP')
+session_map_path = session_map_file
 if os.path.isfile(session_map_path):
     with open(session_map_path) as f:
         for line in f:
@@ -161,7 +166,7 @@ for ws in saved_workspaces:
         continue
 
     # surface 목록
-    panels_raw = run(f'cmux list-panels --workspace {ws_ref}')
+    panels_raw = run(['cmux', 'list-panels', '--workspace', ws_ref])
     surfaces = []
     if panels_raw:
         for pline in panels_raw.strip().split('\n'):
@@ -181,7 +186,7 @@ for ws in saved_workspaces:
             skipped += 1
             continue
 
-        resume_cmd = session.get('resume_cmd', f'claude --resume {session_id}')
+        resume_cmd = f'claude --resume {session_id}'
         last_active_ts = session.get('last_active', '') or last_active_map.get(session_id, '')
         freshness = freshness_check(session_id, last_active_ts)
 
@@ -204,10 +209,10 @@ for ws in saved_workspaces:
         if i < len(surfaces):
             surf_ref = surfaces[i]
         else:
-            new_cmd = f'cmux new-pane --type terminal --workspace {ws_ref}'
+            new_args = ['cmux', 'new-pane', '--type', 'terminal', '--workspace', ws_ref]
             if cwd:
-                new_cmd += f' --command \"cd \'{cwd}\' && zsh\"'
-            new_raw = run(new_cmd)
+                new_args += ['--command', 'cd ' + repr(cwd) + ' && zsh']
+            new_raw = run(new_args)
             surf_match = re.search(r'(surface:\d+)', new_raw) if new_raw else None
             if surf_match:
                 surf_ref = surf_match.group(1)
@@ -218,21 +223,24 @@ for ws in saved_workspaces:
                 continue
 
         # 셸 프롬프트 확인
-        screen = run(f'cmux read-screen --surface {surf_ref}')
+        screen = run(['cmux', 'read-screen', '--surface', surf_ref])
         if not is_shell_prompt(screen):
             print(f'    WARN: {surf_ref} 셸 프롬프트 아님 — Ctrl+C 후 재시도')
-            run(f'cmux send-key --surface {surf_ref} C-c')
+            run(['cmux', 'send-key', '--surface', surf_ref, 'C-c'])
             time.sleep(0.5)
-            run(f'cmux send-keys --surface {surf_ref} -- \"\\n\"')
+            run(['cmux', 'send', '--surface', surf_ref, ''])
+            run(['cmux', 'send-key', '--surface', surf_ref, 'Return'])
             time.sleep(0.3)
 
         # cwd 이동
         if cwd:
-            run(f\"cmux send-keys --surface {surf_ref} -- \\\"cd '{cwd}'\\n\\\"\")
+            run(['cmux', 'send', '--surface', surf_ref, 'cd ' + repr(cwd)])
+            run(['cmux', 'send-key', '--surface', surf_ref, 'Return'])
             time.sleep(0.3)
 
         # resume
-        run(f'cmux send-keys --surface {surf_ref} -- \"{resume_cmd}\\n\"')
+        run(['cmux', 'send', '--surface', surf_ref, resume_cmd])
+        run(['cmux', 'send-key', '--surface', surf_ref, 'Return'])
         resumed += 1
         print(f'    OK: {surf_ref} → {resume_cmd} ({freshness})')
         time.sleep(0.5)

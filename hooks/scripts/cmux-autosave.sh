@@ -26,21 +26,19 @@ FORCE_INTERVAL=900  # 15분
 [[ ! -S /tmp/cmux.sock ]] && exit 0
 [[ -L /tmp/cmux.sock ]] && exit 0
 
-# --- session_active heartbeat 기록 (항상, 트리거 무관) ---
+# --- session_active heartbeat 기록 (항상, 트리거 무관, python 없이 printf로) ---
 if [[ -n "${CMUX_WORKSPACE_ID:-}" && -n "${CMUX_SURFACE_ID:-}" ]]; then
-  python3 -c "
-import json, sys, os
-from datetime import datetime, timezone, timedelta
-kst = timezone(timedelta(hours=9))
-entry = {
-    'type': 'session_active',
-    'workspace_id': sys.argv[1],
-    'surface_id': sys.argv[2],
-    'session_id': os.environ.get('CLAUDE_SESSION_ID', ''),
-    'timestamp': datetime.now(kst).isoformat()
-}
-print(json.dumps(entry, ensure_ascii=False))
-" "$CMUX_WORKSPACE_ID" "$CMUX_SURFACE_ID" >> "$SESSION_MAP" 2>/dev/null || true
+  ts=$(date '+%Y-%m-%dT%H:%M:%S+09:00')
+  printf '{"type":"session_active","workspace_id":"%s","surface_id":"%s","session_id":"%s","timestamp":"%s"}\n' \
+    "$CMUX_WORKSPACE_ID" "$CMUX_SURFACE_ID" "${CLAUDE_SESSION_ID:-}" "$ts" >> "$SESSION_MAP" 2>/dev/null || true
+
+  # session-map 로테이션 (파일 크기 ~300KB ≈ 1000줄 초과 시 tail로 정리)
+  if [[ -f "$SESSION_MAP" ]]; then
+    map_size=$(stat -f '%z' "$SESSION_MAP" 2>/dev/null || echo 0)
+    if (( map_size > 300000 )); then
+      tail -500 "$SESSION_MAP" > "${SESSION_MAP}.tmp" && mv -f "${SESSION_MAP}.tmp" "$SESSION_MAP" 2>/dev/null || true
+    fi
+  fi
 fi
 
 # --- 트리거 판단 (파일 stat만) ---
@@ -210,14 +208,10 @@ for line in ws_raw.strip().split('\n'):
     else:
         ws_data['cwd'] = ''
         ws_data['panels'] = [{'type': 'terminal', 'focused': True}]
-
-    # 호출자 워크스페이스의 cwd/workspace_id 직접 반영
-    if caller_ws_id and caller_ws_uuid and (
-        ws_data.get('workspace_id') == caller_ws_uuid or
-        (not ws_data.get('workspace_id') and name == caller_ws_id)
-    ):
-        ws_data['cwd'] = caller_cwd
-        ws_data['workspace_id'] = caller_ws_uuid
+        # 호출자 워크스페이스인데 기존 데이터 없는 경우 직접 반영
+        if caller_ws_id and caller_ws_uuid:
+            ws_data['cwd'] = caller_cwd
+            ws_data['workspace_id'] = caller_ws_uuid
 
     # --- session-map에서 세션 매칭 ---
     ws_id = ws_data.get('workspace_id', '')
