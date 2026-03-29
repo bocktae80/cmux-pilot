@@ -20,8 +20,23 @@ if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -d "${CLAUDE_PLUGIN_ROOT}/.git" ]]; then
     fi
   fi
   if [[ "$should_check" == true ]]; then
+    # 현재 커밋 저장 (업데이트 감지용)
+    local_head=$(cd "$CLAUDE_PLUGIN_ROOT" && git rev-parse HEAD 2>/dev/null)
+    echo "$local_head" > "${SESSION_MAP_DIR}/.pre-update-head" 2>/dev/null || true
+
+    # 백그라운드 업데이트
     (cd "$CLAUDE_PLUGIN_ROOT" && git fetch origin --quiet 2>/dev/null && git pull origin main --ff-only --quiet 2>/dev/null) &
     touch "$LAST_UPDATE_CHECK" 2>/dev/null || true
+  fi
+
+  # 이전 세션에서 업데이트가 있었는지 확인
+  if [[ -f "${SESSION_MAP_DIR}/.pre-update-head" ]]; then
+    old_head=$(cat "${SESSION_MAP_DIR}/.pre-update-head" 2>/dev/null)
+    cur_head=$(cd "$CLAUDE_PLUGIN_ROOT" && git rev-parse HEAD 2>/dev/null)
+    if [[ -n "$old_head" && -n "$cur_head" && "$old_head" != "$cur_head" ]]; then
+      update_msg="cmux-pilot 플러그인이 업데이트되었습니다 ($(cd "$CLAUDE_PLUGIN_ROOT" && git log --oneline -1 2>/dev/null))."
+      rm -f "${SESSION_MAP_DIR}/.pre-update-head" 2>/dev/null
+    fi
   fi
 fi
 
@@ -108,4 +123,7 @@ print(json.dumps(entry, ensure_ascii=False))
 " "$surface_id" "$ws_id" "$ws_name" "$SESSION_ID" "$PWD" >> "${SESSION_MAP_DIR}/session-map.jsonl"
 fi
 
-echo "cmux 환경 감지됨. ${ws_info}. /cmux-ws로 워크스페이스를 관리할 수 있습니다."
+# --- 출력 ---
+output="cmux 환경 감지됨. ${ws_info}. /cmux-ws로 워크스페이스를 관리할 수 있습니다."
+[[ -n "${update_msg:-}" ]] && output="${update_msg}\n${output}"
+echo -e "$output"

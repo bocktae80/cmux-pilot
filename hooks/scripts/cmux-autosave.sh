@@ -97,7 +97,7 @@ except:
   fi
 fi
 
-python3 -c "
+ws_count=$(python3 -c "
 import json, os, re, sys, subprocess
 from datetime import datetime, timezone, timedelta
 
@@ -264,15 +264,16 @@ with open(save_path, 'w') as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
 
 print(f'{len(workspaces)}')
-" "$ws_raw" "$SAVE_FILE" "$caller_ws_id" "$caller_sidebar" > /dev/null 2>&1
+" "$ws_raw" "$SAVE_FILE" "$caller_ws_id" "$caller_sidebar" 2>/dev/null)
 
-# 로그 기록
+# 로그 기록 + 사용자 메시지
 if [[ -f "$SAVE_FILE" ]]; then
   save_epoch=$(stat -f '%m' "$SAVE_FILE" 2>/dev/null || echo 0)
   check_epoch=$(date +%s)
   diff=$(( check_epoch - save_epoch ))
   if (( diff <= 5 )); then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] autosave: ${reason}" >> "$LOG_FILE"
+    echo "cmux 워크스페이스 동기화 완료 (${ws_count:-?}개, ${reason})"
   fi
 fi
 
