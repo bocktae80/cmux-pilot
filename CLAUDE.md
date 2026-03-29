@@ -32,7 +32,7 @@ cmux-pilot/                        # 플러그인 루트
 │
 ├── lib/                           # 라이브러리
 │   ├── cmux-helpers.sh            # 기존 헬퍼 (45함수)
-│   └── cmux-ws-manager.sh         # save/restore/new 핵심 로직
+│   └── cmux-ws-manager.sh         # save/new/list 핵심 로직
 │
 ├── reference/                     # cmux 레퍼런스 (기존 연구)
 │   └── return-formats.md
@@ -45,9 +45,9 @@ cmux-pilot/                        # 플러그인 루트
 
 - `/cmux-ws` — 워크스페이스 목록
 - `/cmux-ws new` — 새 워크스페이스 (이름, 경로, 컬러, 브라우저 URL)
-- `/cmux-ws save` — 전체 구성을 JSON으로 저장 (세션 매핑 포함)
-- `/cmux-ws restore` — JSON에서 워크스페이스 복원 (세션 자동 resume)
-- `/cmux-ws resume` — 기존 워크스페이스에 세션 일괄 복원
+- `/cmux-ws save` — 전체 구성을 JSON으로 저장 (full save)
+- `/cmux-ws resume` — 모든 워크스페이스의 Claude Code 세션 일괄 복원
+- `/cmux-ws restart` — 모든 Claude Code 세션 일괄 exit → resume (플러그인 업데이트 시)
 
 ## 규칙
 

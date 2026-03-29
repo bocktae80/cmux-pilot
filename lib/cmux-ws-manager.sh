@@ -62,6 +62,47 @@ cmux_ws_new() {
     cmux new-pane --type browser --direction right --url "$browser_url" --workspace "$uuid" >/dev/null 2>&1
   fi
 
+  # workspaces.json에 즉시 incremental 추가
+  local save_file="${CMUX_PILOT_DEFAULT_FILE}"
+  if [[ -f "$save_file" ]]; then
+    python3 -c "
+import json, sys
+from datetime import datetime, timezone, timedelta
+
+save_path = sys.argv[1]
+name = sys.argv[2]
+cwd = sys.argv[3]
+uuid = sys.argv[4]
+color = sys.argv[5]
+browser_url = sys.argv[6]
+
+try:
+    with open(save_path) as f:
+        data = json.load(f)
+except:
+    data = {'version': 2, 'workspaces': []}
+
+panels = [{'type': 'terminal', 'focused': True}]
+if browser_url:
+    panels.append({'type': 'browser', 'direction': 'right', 'url': browser_url, 'focused': False})
+
+new_ws = {
+    'name': name,
+    'cwd': cwd,
+    'workspace_id': uuid,
+    'status': [{'key': 'project', 'value': name, 'color': color}],
+    'panels': panels
+}
+
+data['workspaces'].append(new_ws)
+kst = timezone(timedelta(hours=9))
+data['saved_at'] = datetime.now(kst).isoformat()
+
+with open(save_path, 'w') as f:
+    json.dump(data, f, ensure_ascii=False, indent=2)
+" "$save_file" "$name" "$path" "$uuid" "$color" "$browser_url" 2>/dev/null || true
+  fi
+
   echo "워크스페이스 생성 완료: $name ($uuid)"
   echo "  경로: $path"
   echo "  색상: $color"
@@ -101,8 +142,9 @@ def run(cmd):
 raw = '''${raw}'''
 workspaces = []
 
-# session-map.jsonl 로딩 (workspace_id별 인덱스)
+# session-map.jsonl 로딩 (workspace_id별 인덱스 + 이름 역조회)
 session_map_by_ws = {}
+session_map_name_to_wid = {}
 session_map_path = os.path.expanduser('~/.config/cmux-pilot/session-map.jsonl')
 if os.path.isfile(session_map_path):
     with open(session_map_path) as f:
@@ -112,9 +154,16 @@ if os.path.isfile(session_map_path):
                 continue
             try:
                 entry = json.loads(map_line)
+                etype = entry.get('type', 'session_start')
+                if etype == 'session_active':
+                    continue  # heartbeat는 세션 매칭에 불필요
                 wid = entry.get('workspace_id', '')
-                if wid:
+                wname = entry.get('workspace_name', '')
+                sid = entry.get('session_id')
+                if wid and sid:  # session_id null 제외
                     session_map_by_ws.setdefault(wid, []).append(entry)
+                if wid and wname:
+                    session_map_name_to_wid[wname] = wid
             except:
                 continue
 
@@ -194,10 +243,16 @@ for line in raw.strip().split('\n'):
     claude_sessions = []
     claude_session = None
 
-    if ws_uuid and ws_uuid in session_map_by_ws:
+    # workspace UUID로 매칭, 없으면 이름 역조회 (cmux 재시작 후 UUID 변경 대응)
+    map_uuid = ws_uuid
+    if not map_uuid or map_uuid not in session_map_by_ws:
+        if name in session_map_name_to_wid:
+            map_uuid = session_map_name_to_wid[name]
+
+    if map_uuid and map_uuid in session_map_by_ws:
         # session-map에서 workspace UUID로 매칭 → surface별 최신 세션
         surface_latest = {}
-        for entry in session_map_by_ws[ws_uuid]:
+        for entry in session_map_by_ws[map_uuid]:
             sid = entry.get('surface_id', '')
             if sid:
                 if sid not in surface_latest or entry.get('timestamp', '') > surface_latest[sid].get('timestamp', ''):
@@ -300,7 +355,7 @@ cmux_ws_restore() {
   local restored=0
 
   # Python으로 JSON 읽어서 각 워크스페이스 복원
-  while IFS=$'\t' read -r name cwd status_json panels_json sessions_json; do
+  while IFS=$'\t' read -r name cwd status_json panels_json sessions_json old_wid; do
     echo "  복원 중: $name ($cwd)"
 
     # 워크스페이스 생성
@@ -319,6 +374,23 @@ cmux_ws_restore() {
 
     # 이름 변경
     cmux rename-workspace --workspace "$uuid" "$name" >/dev/null 2>&1 || true
+
+    # workspace_restored 레코드 기록 (old → new UUID 매핑)
+    if [[ -n "$old_wid" ]]; then
+      python3 -c "
+import json, sys
+from datetime import datetime, timezone, timedelta
+kst = timezone(timedelta(hours=9))
+entry = json.dumps({
+    'type': 'workspace_restored',
+    'old_workspace_id': sys.argv[1],
+    'new_workspace_id': sys.argv[2],
+    'workspace_name': sys.argv[3],
+    'timestamp': datetime.now(kst).isoformat()
+}, ensure_ascii=False)
+print(entry)
+" "$old_wid" "$uuid" "$name" >> "${CMUX_PILOT_CONFIG_DIR}/session-map.jsonl" 2>/dev/null || true
+    fi
 
     # status 복원
     if [[ -n "$status_json" && "$status_json" != "[]" ]]; then
@@ -407,9 +479,12 @@ for i, session in enumerate(sessions):
     print(f'    resume: {surf_ref} → {resume_cmd}')
     time.sleep(0.5)
 
-    # session-map.jsonl에 새 매핑 기록
+    # session-map.jsonl에 새 매핑 기록 (type: session_start + workspace_restored)
     from datetime import datetime, timezone, timedelta
     kst = timezone(timedelta(hours=9))
+    import os
+    map_path = os.path.expanduser('~/.config/cmux-pilot/session-map.jsonl')
+
     # surface UUID 추출 (sidebar-state에서)
     sidebar = run(f'cmux sidebar-state --surface {surf_ref}')
     surface_uuid = ''
@@ -418,9 +493,8 @@ for i, session in enumerate(sessions):
             surface_uuid = sline[3:]
             break
     if surface_uuid and session_id:
-        import os
-        map_path = os.path.expanduser('~/.config/cmux-pilot/session-map.jsonl')
         entry = json.dumps({
+            'type': 'session_start',
             'surface_id': surface_uuid,
             'workspace_id': uuid,
             'workspace_name': '$name',
@@ -443,14 +517,21 @@ for ws in d.get('workspaces', []):
     cwd = ws.get('cwd', '')
     status = json.dumps(ws.get('status', []))
     panels = json.dumps(ws.get('panels', []))
-    # claude_sessions (복수) 우선, 없으면 claude_session (단수)를 배열로
     sessions = ws.get('claude_sessions', [])
     if not sessions and ws.get('claude_session'):
         sessions = [ws['claude_session']]
     sessions_json = json.dumps(sessions)
-    print(f'{name}\t{cwd}\t{status}\t{panels}\t{sessions_json}')
+    # old_workspace_id for workspace_restored record
+    old_wid = ws.get('workspace_id', '')
+    print(f'{name}\t{cwd}\t{status}\t{panels}\t{sessions_json}\t{old_wid}')
 ")
 
   echo ""
   echo "복원 완료: 성공 ${restored}개, 실패 ${failed}개"
+
+  # 복원 후 workspaces.json을 새 workspace_id로 즉시 갱신
+  if (( restored > 0 )); then
+    echo "workspaces.json 갱신 중..."
+    cmux_ws_save "$input" 2>/dev/null && echo "workspaces.json 갱신 완료" || echo "WARN: workspaces.json 갱신 실패"
+  fi
 }

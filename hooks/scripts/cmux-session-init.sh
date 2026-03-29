@@ -1,10 +1,29 @@
 #!/bin/bash
-# cmux-session-init.sh — SessionStart 훅: cmux 환경 감지 + 세션 매핑 기록
+# cmux-session-init.sh — SessionStart 훅: 자동 업데이트 + cmux 환경 감지 + 세션 매핑 기록
 
 CMUX="/Applications/cmux.app/Contents/Resources/bin/cmux"
 SESSION_MAP_DIR="${HOME}/.config/cmux-pilot"
 DEBUG_LOG="${SESSION_MAP_DIR}/hook-debug.log"
+LAST_UPDATE_CHECK="${SESSION_MAP_DIR}/.last-update-check"
 mkdir -p "$SESSION_MAP_DIR"
+
+# --- 플러그인 자동 업데이트 (하루 1번, 백그라운드) ---
+if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -d "${CLAUDE_PLUGIN_ROOT}/.git" ]]; then
+  should_check=false
+  if [[ ! -f "$LAST_UPDATE_CHECK" ]]; then
+    should_check=true
+  else
+    last_epoch=$(stat -f '%m' "$LAST_UPDATE_CHECK" 2>/dev/null || echo 0)
+    now_epoch=$(date +%s)
+    if (( now_epoch - last_epoch > 86400 )); then
+      should_check=true
+    fi
+  fi
+  if [[ "$should_check" == true ]]; then
+    (cd "$CLAUDE_PLUGIN_ROOT" && git fetch origin --quiet 2>/dev/null && git pull origin main --ff-only --quiet 2>/dev/null) &
+    touch "$LAST_UPDATE_CHECK" 2>/dev/null || true
+  fi
+fi
 
 # --- stdin에서 session_id 추출 ---
 INPUT=$(cat)
@@ -17,11 +36,11 @@ except:
     print('')
 " 2>/dev/null)
 
-# 디버그 로그 (최근 50줄 유지)
-{
-  echo "[$(date '+%Y-%m-%dT%H:%M:%S')] stdin=${INPUT:-(empty)} sid=${SESSION_ID:-(empty)} ws=${CMUX_WORKSPACE_ID:-(empty)} sf=${CMUX_SURFACE_ID:-(empty)}"
-} >> "$DEBUG_LOG"
-tail -50 "$DEBUG_LOG" > "${DEBUG_LOG}.tmp" && mv "${DEBUG_LOG}.tmp" "$DEBUG_LOG"
+# 디버그 로그 (최근 50줄 유지, 원자적 교체)
+echo "[$(date '+%Y-%m-%dT%H:%M:%S')] stdin=${INPUT:-(empty)} sid=${SESSION_ID:-(empty)} ws=${CMUX_WORKSPACE_ID:-(empty)} sf=${CMUX_SURFACE_ID:-(empty)}" >> "$DEBUG_LOG" 2>/dev/null || true
+if [[ -f "$DEBUG_LOG" ]] && (( $(wc -l < "$DEBUG_LOG" 2>/dev/null || echo 0) > 60 )); then
+  tail -50 "$DEBUG_LOG" > "${DEBUG_LOG}.tmp" 2>/dev/null && mv -f "${DEBUG_LOG}.tmp" "$DEBUG_LOG" 2>/dev/null || true
+fi
 
 # --- cmux 실행 여부 확인 ---
 [[ ! -S /tmp/cmux.sock ]] && exit 0
@@ -69,21 +88,19 @@ else
 fi
 
 # --- 세션 매핑 기록 ---
-# session_id 없으면 fallback 생성 (복원 시 정확도 떨어지지만 매핑 자체는 유지)
-if [[ -z "$SESSION_ID" ]]; then
-  SESSION_ID="no-sid-$(date +%s)"
-fi
-
+# session_id 없으면 null로 기록 (resume 후보에서 제외됨)
 if [[ -n "$ws_id" && -n "$surface_id" ]]; then
   python3 -c "
 import json, sys
 from datetime import datetime, timezone, timedelta
 kst = timezone(timedelta(hours=9))
+sid = sys.argv[4] if sys.argv[4] else None
 entry = {
+    'type': 'session_start',
     'surface_id': sys.argv[1],
     'workspace_id': sys.argv[2],
     'workspace_name': sys.argv[3],
-    'session_id': sys.argv[4],
+    'session_id': sid,
     'cwd': sys.argv[5],
     'timestamp': datetime.now(kst).isoformat()
 }
