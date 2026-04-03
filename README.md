@@ -1,5 +1,7 @@
 # cmux-pilot
 
+한국어 | [English](./README.en.md)
+
 [cmux](https://cmux.app) 워크스페이스와 Claude Code 세션을 통합 관리하는 Claude Code 플러그인.
 
 여러 cmux 워크스페이스에서 Claude Code를 동시에 사용할 때, 세션 매핑/동기화/복원을 자동화합니다.

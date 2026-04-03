@@ -1,5 +1,7 @@
 # cmux-pilot
 
+한국어 | [English](./CLAUDE.en.md)
+
 > cmux Claude Code 플러그인 — 워크스페이스 + Claude Code 세션 통합 관리
 
 ## 설치
