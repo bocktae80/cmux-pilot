@@ -182,13 +182,17 @@ for line in raw.strip().split('\n'):
     if name.startswith('['):
         continue
 
-    # cwd 추출 (sidebar-state)
+    # cwd, 탭 색 추출 (sidebar-state)
     sidebar = run(f'cmux sidebar-state --workspace {ref}')
     cwd = ''
+    tab_color = ''
     for sline in sidebar.split('\n'):
         if sline.startswith('cwd='):
             cwd = sline[4:]
-            break
+        elif sline.startswith('color='):
+            raw_color = sline[6:].strip()
+            if raw_color and raw_color != 'none':
+                tab_color = raw_color
 
     # status 추출: 'key=value color=#hex' 형식
     status_raw = run(f'cmux list-status --workspace {ref}')
@@ -308,6 +312,8 @@ for line in raw.strip().split('\n'):
         'status': status_items,
         'panels': panels
     }
+    if tab_color:
+        ws_data['color'] = tab_color
     if ws_uuid:
         ws_data['workspace_id'] = ws_uuid
     if claude_sessions:
@@ -354,8 +360,12 @@ cmux_ws_restore() {
   local failed=0
   local restored=0
 
+  # 복원 인덱스 — JSON 순서를 cmux 사이드바 순서에 반영하기 위한 reorder 대상 index
+  local reorder_idx=1
+  local -a created_refs=()
+
   # Python으로 JSON 읽어서 각 워크스페이스 복원
-  while IFS=$'\t' read -r name cwd status_json panels_json sessions_json old_wid; do
+  while IFS=$'\t' read -r name cwd status_json panels_json sessions_json old_wid tab_color; do
     echo "  복원 중: $name ($cwd)"
 
     # 워크스페이스 생성
@@ -372,8 +382,19 @@ cmux_ws_restore() {
       continue
     fi
 
+    created_refs+=("$uuid")
+
     # 이름 변경
     cmux rename-workspace --workspace "$uuid" "$name" >/dev/null 2>&1 || true
+
+    # 탭 색 복원 (JSON에 color 필드가 있을 때)
+    if [[ -n "$tab_color" && "$tab_color" != "none" ]]; then
+      cmux workspace-action --action set-color --color "$tab_color" --workspace "$uuid" >/dev/null 2>&1 || true
+    fi
+
+    # 저장 당시 순서로 사이드바 재배치 (1부터 증가)
+    cmux reorder-workspace --workspace "$uuid" --index "$reorder_idx" >/dev/null 2>&1 || true
+    ((reorder_idx++))
 
     # workspace_restored 레코드 기록 (old → new UUID 매핑)
     if [[ -n "$old_wid" ]]; then
@@ -530,7 +551,8 @@ for ws in d.get('workspaces', []):
     sessions_json = json.dumps(sessions)
     # old_workspace_id for workspace_restored record
     old_wid = ws.get('workspace_id', '')
-    print(f'{name}\t{cwd}\t{status}\t{panels}\t{sessions_json}\t{old_wid}')
+    tab_color = ws.get('color', '')
+    print(f'{name}\t{cwd}\t{status}\t{panels}\t{sessions_json}\t{old_wid}\t{tab_color}')
 " "$input")
 
   echo ""

@@ -8,12 +8,19 @@ set -euo pipefail
 # Workspace
 # ============================================================
 
-# 워크스페이스 생성 -> UUID 반환
+# 워크스페이스 생성 -> ref(workspace:N) 또는 UUID 반환
+# cmux new-workspace는 "OK workspace:N" 형식으로 ref를 반환한다.
+# 구 버전 호환을 위해 UUID 포맷도 폴백으로 허용한다.
 cmux_new_workspace() {
   local cmd="${1:-zsh}"
   local raw
   raw=$(cmux new-workspace --command "$cmd" 2>&1)
-  echo "$raw" | grep -oE '[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}'
+  local ref
+  ref=$(echo "$raw" | grep -oE 'workspace:[0-9]+' | head -1)
+  if [[ -z "$ref" ]]; then
+    ref=$(echo "$raw" | grep -oE '[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}' | head -1)
+  fi
+  echo "$ref"
 }
 
 # 워크스페이스 생성 + 이름 지정 -> UUID 반환
