@@ -8,3 +8,11 @@
 # .claude 개인 파일만 제외 (commands/, skills/, settings.json은 팀 공유)
 .claude/settings.local.json
 .claude/sessions/
+**/.claude/sessions/
+.claude/rules/
+
+# 플러그인 런타임 산출물
+.cpf/
+
+# 워크북 개인 세션 로그
+workbook/log/sessions/
