@@ -123,6 +123,10 @@ print(json.dumps(entry, ensure_ascii=False))
 " "$surface_id" "$ws_id" "$ws_name" "$SESSION_ID" "$PWD" >> "${SESSION_MAP_DIR}/session-map.jsonl"
 fi
 
+# --- 사이드바 상태 초기화 (네이티브 claude-hook) ---
+"$CMUX" clear-status "claude" >/dev/null 2>&1 || true
+echo '{}' | "$CMUX" claude-hook session-start >/dev/null 2>&1 || true
+
 # --- 출력 ---
 output="cmux 환경 감지됨. ${ws_info}. /cmux-ws로 워크스페이스를 관리할 수 있습니다."
 [[ -n "${update_msg:-}" ]] && output="${update_msg}\n${output}"

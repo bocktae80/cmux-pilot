@@ -26,6 +26,9 @@ FORCE_INTERVAL=900  # 15분
 [[ ! -S /tmp/cmux.sock ]] && exit 0
 [[ -L /tmp/cmux.sock ]] && exit 0
 
+# 사용자 입력 시작 → Working 상태 (네이티브 claude-hook)
+echo '{}' | cmux claude-hook session-start >/dev/null 2>&1
+
 # --- session_active heartbeat 기록 (항상, 트리거 무관, python 없이 printf로) ---
 if [[ -n "${CMUX_WORKSPACE_ID:-}" && -n "${CMUX_SURFACE_ID:-}" ]]; then
   ts=$(date '+%Y-%m-%dT%H:%M:%S+09:00')
