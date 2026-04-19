@@ -1,0 +1,82 @@
+[
+  {
+    "query": "cmux 크래시 났는데 워크스페이스 8개 다시 복원해야 해. camfit-cpf 워크스페이스에 Claude Code 세션 3개 돌리고 있었는데 전부 날아감",
+    "should_trigger": true
+  },
+  {
+    "query": "지금 열려있는 워크스페이스 현재 상태를 저장해둬. 나중에 다시 열 수 있게",
+    "should_trigger": true
+  },
+  {
+    "query": "워크스페이스 새로 만들어줘. 이름은 dina이고 경로는 ~/Work/dina, 브라우저 패널도 localhost:5173으로 같이 열어줘",
+    "should_trigger": true
+  },
+  {
+    "query": "autosave cron 켜줘. 15분마다 자동 저장되게 해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "cmux가 죽었다가 다시 켰는데 워크스페이스는 살아있어. Claude Code 세션만 전부 죽었거든 일괄로 resume해줄 수 있어?",
+    "should_trigger": true
+  },
+  {
+    "query": "같은 camfit-cpf 경로에 워크스페이스가 3개나 있는데 각각 다른 Claude Code 세션이 매핑되어야 해. 세션 매핑 확인해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "작업 환경 세이브해두고 퇴근할게. 내일 restore 할 수 있게",
+    "should_trigger": true
+  },
+  {
+    "query": "session-map.jsonl에 워크스페이스별로 세션이 제대로 기록되고 있는지 확인해줘",
+    "should_trigger": true
+  },
+  {
+    "query": "workspaces.json 복원해서 패널 레이아웃이랑 브라우저 탭까지 원래대로 돌려줘",
+    "should_trigger": true
+  },
+  {
+    "query": "자동 저장 꺼줘. cron에서 해제해야 해",
+    "should_trigger": true
+  },
+  {
+    "query": "cmux 사이드바에 현재 git 브랜치 이름을 status로 표시하고 싶어. set-status 명령어 어떻게 쓰는 거야?",
+    "should_trigger": false
+  },
+  {
+    "query": "Claude Code 세션을 resume하고 싶은데, 세션 ID가 abc12345야. claude --resume abc12345 실행해줘",
+    "should_trigger": false
+  },
+  {
+    "query": "cmux browser로 localhost:3000을 열어서 스크린샷 찍어줘. 현재 UI 상태 확인하고 싶어",
+    "should_trigger": false
+  },
+  {
+    "query": "이 프로젝트의 CLAUDE.md를 업데이트해줘. 새로 추가한 기능 반영해야 해",
+    "should_trigger": false
+  },
+  {
+    "query": "camfit 프로젝트에서 TypeScript strict 모드 설정 어떻게 되어있는지 tsconfig.json 확인해줘",
+    "should_trigger": false
+  },
+  {
+    "query": "cmux send-keys로 다른 터미널에 명령어 보내고 싶은데, surface:3에 npm run dev 실행해줘",
+    "should_trigger": false
+  },
+  {
+    "query": "워크북 세션 시작할게. /wb-session 실행해줘",
+    "should_trigger": false
+  },
+  {
+    "query": "cmux notify로 빌드 완료 알림 보내줘. 제목은 'Build Done'이고 본문은 '15분 소요'",
+    "should_trigger": false
+  },
+  {
+    "query": "작업 이력 분석해줘. 이번 주에 어떤 워크스페이스에서 얼마나 작업했는지 통계 보여줘",
+    "should_trigger": false
+  },
+  {
+    "query": "cmux wait-for로 시그널 동기화 설정하고 싶어. 빌드 끝나면 다른 워크스페이스에 알리는 패턴",
+    "should_trigger": false
+  }
+]
